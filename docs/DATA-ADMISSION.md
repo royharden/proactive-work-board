@@ -93,17 +93,22 @@ G2 is also required.
   private canary per board; randomized opaque IDs and original phrasing/graphs.
 - [ ] Preserve bundle, per-board observable/script/outcome, template and scenario
   hashes; source/author attestations, freeze UTC and external custody location.
-- [ ] Validate both split definitions: 20 boards each; 30 tasks, 2–3 projects,
+- [ ] Validate the actual held-out inventory against these shared split-contract
+  requirements: 20 boards; 30 tasks, 2–3 projects,
   4–6 people, 8–12 DAG links, 3–6 documents per board. Seven–ten focal opportunities
   per board, 160 per split; all other 440 tasks are background no-action.
-- [ ] Verify exact family totals in each split: dependency 32, semantic evidence
+- [ ] Verify actual held-out family totals: dependency 32, semantic evidence
   40, delegate 24 (96 resolution-eligible); missing-info ask 12, decoy 40,
   duplicate restraint 12 (64 restraint). Total 600 tasks. Every board has at
   least two decoys and at least one near-miss decoy; forty decoys thus means
   exactly two per board. Do not resize after exposure.
-- [ ] Dev seeds, when later generated after G2, are exactly 20000–20019. Held-out
-  is H-authored, not generated dev. Record disjoint dev/held-out schedule salts,
-  edition/template/scenario disjointness review and bounded visible decidability.
+- [ ] Record the dev contract only at G2: seeds 20000–20019, the same fixed totals
+  above and a reserved schedule-salt namespace disjoint from held-out. No actual
+  dev inventory, generated counts or dev comparisons exist yet and none is a G2
+  prerequisite. Held-out is H-authored. Review its independent origin and bounded
+  visible decidability now. After G2, the authorized owner generates dev and
+  validates its actual counts/seeds/salts and edition/template/scenario
+  disjointness against the sealed held-out commitments without builder exposure.
 - [ ] Review every background task across reachable exogenous-script states.
   None may acquire an actionable blocker without a focal label. Correct such
   errors in H's edition before exposure; do not ignore them in denominators.
