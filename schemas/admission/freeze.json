@@ -1,0 +1,514 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:admission:freeze",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "stage": {
+      "enum": [
+        "P01_CONTRACTS",
+        "G3_STUDY"
+      ]
+    },
+    "status": {
+      "enum": [
+        "UNFROZEN",
+        "FROZEN"
+      ]
+    },
+    "contracts_commit": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "contracts_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "study_commit": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "study_pins": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "prereg": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            },
+            "b3_rules": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            },
+            "agent_prompt": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            },
+            "agent_schema": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            },
+            "model_settings": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            },
+            "call_slots": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "prereg",
+            "b3_rules",
+            "agent_prompt",
+            "agent_schema",
+            "model_settings",
+            "call_slots"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "frozen_utc": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "roy_unseal_decision": {
+      "anyOf": [
+        {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "heldout_bundle_sha256": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "g1_status": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/status"
+    },
+    "g2_status": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/status"
+    },
+    "g3_status": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/status"
+    }
+  },
+  "required": [
+    "schema_version",
+    "stage",
+    "status",
+    "contracts_commit",
+    "contracts_files",
+    "study_commit",
+    "study_pins",
+    "frozen_utc",
+    "roy_unseal_decision",
+    "heldout_bundle_sha256",
+    "g1_status",
+    "g2_status",
+    "g3_status"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "UNFROZEN"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "contracts_commit": {
+            "const": null
+          },
+          "contracts_files": {
+            "maxItems": 0
+          },
+          "study_commit": {
+            "const": null
+          },
+          "study_pins": {
+            "const": null
+          },
+          "frozen_utc": {
+            "const": null
+          },
+          "roy_unseal_decision": {
+            "const": null
+          },
+          "heldout_bundle_sha256": {
+            "const": null
+          },
+          "g3_status": {
+            "const": "PENDING - needs Roy"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "contracts_commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "contracts_files": {
+            "minItems": 4
+          },
+          "frozen_utc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "P01_CONTRACTS"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "study_commit": {
+            "const": null
+          },
+          "study_pins": {
+            "const": null
+          },
+          "roy_unseal_decision": {
+            "const": null
+          },
+          "heldout_bundle_sha256": {
+            "const": null
+          },
+          "g3_status": {
+            "const": "PENDING - needs Roy"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "G3_STUDY"
+          },
+          "status": {
+            "const": "FROZEN"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "study_commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "study_pins": {
+            "type": "object",
+            "properties": {
+              "prereg": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false
+              },
+              "b3_rules": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false
+              },
+              "agent_prompt": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false
+              },
+              "agent_schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false
+              },
+              "model_settings": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false
+              },
+              "call_slots": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "prereg",
+              "b3_rules",
+              "agent_prompt",
+              "agent_schema",
+              "model_settings",
+              "call_slots"
+            ],
+            "additionalProperties": false
+          },
+          "roy_unseal_decision": {
+            "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+          },
+          "heldout_bundle_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "g1_status": {
+            "const": "PASS"
+          },
+          "g2_status": {
+            "const": "PASS"
+          },
+          "g3_status": {
+            "const": "PASS"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "P01_CONTRACTS"
+          },
+          "status": {
+            "const": "UNFROZEN"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "g1_status": {
+            "const": "PENDING - needs Roy"
+          },
+          "g2_status": {
+            "const": "PENDING - needs Roy"
+          }
+        }
+      }
+    }
+  ]
+}
