@@ -1,0 +1,419 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:wire:proposal",
+  "type": "object",
+  "properties": {
+    "proposal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "board_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidate_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action_bundle": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:wire:action"
+      },
+      "minItems": 1,
+      "maxItems": 4
+    },
+    "intent": {
+      "type": "object",
+      "properties": {
+        "board_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action_kind": {
+          "enum": [
+            "clear_dependency",
+            "set_ready",
+            "reassign_to_delegate",
+            "request_info",
+            "evidence_comment"
+          ]
+        },
+        "semantic_target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "episode_epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "intent_key": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "board_id",
+        "task_id",
+        "action_kind",
+        "semantic_target",
+        "episode_epoch",
+        "intent_key"
+      ],
+      "additionalProperties": false
+    },
+    "read_binding": {
+      "type": "object",
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "projects",
+                  "tasks",
+                  "dependency_links",
+                  "comments",
+                  "documents",
+                  "people",
+                  "availability",
+                  "delegations"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version"
+            ],
+            "additionalProperties": false
+          },
+          "uniqueItems": true
+        },
+        "evidence_scope_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "effective_from_tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 96
+        },
+        "effective_until_tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 96
+        }
+      },
+      "required": [
+        "rows",
+        "evidence_scope_revision",
+        "effective_from_tick",
+        "effective_until_tick"
+      ],
+      "additionalProperties": false
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "projects",
+              "tasks",
+              "dependency_links",
+              "comments",
+              "documents",
+              "people",
+              "availability",
+              "delegations"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "version",
+          "digest"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "compiled_write_set": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "const": "delete"
+              },
+              "kind": {
+                "const": "dependency_links"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "task_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "dependency_task_id": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "op",
+              "kind",
+              "id",
+              "task_id",
+              "dependency_task_id"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "const": "update"
+              },
+              "kind": {
+                "const": "tasks"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "field": {
+                "const": "status"
+              },
+              "value": {
+                "const": "ready"
+              }
+            },
+            "required": [
+              "op",
+              "kind",
+              "id",
+              "field",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "const": "update"
+              },
+              "kind": {
+                "const": "tasks"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "field": {
+                "const": "assignee_id"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "op",
+              "kind",
+              "id",
+              "field",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "const": "insert"
+              },
+              "kind": {
+                "const": "comments"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "task_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actor_role": {
+                "enum": [
+                  "agent",
+                  "rules"
+                ]
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1
+              },
+              "cites": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "projects",
+                        "tasks",
+                        "dependency_links",
+                        "comments",
+                        "documents",
+                        "people",
+                        "availability",
+                        "delegations"
+                      ]
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "id",
+                    "version",
+                    "digest"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "topic": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "kind",
+              "id",
+              "task_id",
+              "actor_role",
+              "body",
+              "cites",
+              "topic"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 4,
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "kind": {
+                "const": "comments"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "tasks",
+                  "dependency_links"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 3
+        }
+      ]
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "predicted_summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expires_tick": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 96
+    }
+  },
+  "required": [
+    "proposal_id",
+    "board_id",
+    "task_id",
+    "candidate_id",
+    "action_bundle",
+    "intent",
+    "read_binding",
+    "evidence_refs",
+    "compiled_write_set",
+    "digest",
+    "predicted_summary",
+    "expires_tick"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:wire:decision",
+  "type": "object",
+  "properties": {
+    "decision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "board_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposal_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "read_binding": {
+      "type": "object",
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "projects",
+                  "tasks",
+                  "dependency_links",
+                  "comments",
+                  "documents",
+                  "people",
+                  "availability",
+                  "delegations"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version"
+            ],
+            "additionalProperties": false
+          },
+          "uniqueItems": true
+        },
+        "evidence_scope_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "effective_from_tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 96
+        },
+        "effective_until_tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 96
+        }
+      },
+      "required": [
+        "rows",
+        "evidence_scope_revision",
+        "effective_from_tick",
+        "effective_until_tick"
+      ],
+      "additionalProperties": false
+    },
+    "operator_label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actor_kind": {
+      "enum": [
+        "scripted",
+        "human"
+      ]
+    },
+    "status": {
+      "enum": [
+        "approved",
+        "rejected",
+        "expired",
+        "superseded"
+      ]
+    },
+    "decided_tick": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 96
+    },
+    "expires_tick": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 96
+    }
+  },
+  "required": [
+    "decision_id",
+    "proposal_id",
+    "board_id",
+    "proposal_digest",
+    "read_binding",
+    "operator_label",
+    "actor_kind",
+    "status",
+    "decided_tick",
+    "expires_tick"
+  ],
+  "additionalProperties": false
+}
