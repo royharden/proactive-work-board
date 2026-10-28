@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:admission:attestation",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "role": {
+      "enum": [
+        "H",
+        "Q",
+        "custodian"
+      ]
+    },
+    "identity": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+    },
+    "appointment_by_roy": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "builder_separation_statement": {
+      "type": "string",
+      "minLength": 1
+    },
+    "original_synthetic_authorship_statement": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "redistribution_permission_statement": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "selected_licence_decision": {
+      "anyOf": [
+        {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rights_source_review": {
+      "anyOf": [
+        {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "attribution": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/attribution"
+    }
+  },
+  "required": [
+    "schema_version",
+    "role",
+    "identity",
+    "appointment_by_roy",
+    "builder_separation_statement",
+    "original_synthetic_authorship_statement",
+    "redistribution_permission_statement",
+    "selected_licence_decision",
+    "rights_source_review",
+    "attribution"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "enum": [
+              "H",
+              "Q"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "original_synthetic_authorship_statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "redistribution_permission_statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "selected_licence_decision": {
+            "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+          },
+          "rights_source_review": {
+            "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:admission:common",
+  "$defs": {
+    "identity": {
+      "type": "object",
+      "properties": {
+        "callsign": {
+          "type": "string",
+          "minLength": 1
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "harness": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "callsign",
+        "session_id",
+        "harness"
+      ],
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "location": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "visibility": {
+          "enum": [
+            "public_contract",
+            "public_pilot",
+            "public_control",
+            "private_custodian",
+            "private_auditor"
+          ]
+        },
+        "recorded_by": {
+          "type": "object",
+          "properties": {
+            "callsign": {
+              "type": "string",
+              "minLength": 1
+            },
+            "session_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "harness": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "callsign",
+            "session_id",
+            "harness"
+          ],
+          "additionalProperties": false
+        },
+        "recorded_utc": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "location",
+        "sha256",
+        "visibility",
+        "recorded_by",
+        "recorded_utc"
+      ],
+      "additionalProperties": false
+    },
+    "attribution": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "object",
+          "properties": {
+            "callsign": {
+              "type": "string",
+              "minLength": 1
+            },
+            "session_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "harness": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "callsign",
+            "session_id",
+            "harness"
+          ],
+          "additionalProperties": false
+        },
+        "bundle_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "recorded_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "actor",
+        "bundle_sha256",
+        "recorded_utc",
+        "statement"
+      ],
+      "additionalProperties": false
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "date_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "family_counts": {
+      "type": "object",
+      "properties": {
+        "dependency": {
+          "const": 32
+        },
+        "semantic_evidence": {
+          "const": 40
+        },
+        "delegate": {
+          "const": 24
+        },
+        "missing_info_ask": {
+          "const": 12
+        },
+        "decoy": {
+          "const": 40
+        },
+        "duplicate_restraint": {
+          "const": 12
+        }
+      },
+      "required": [
+        "dependency",
+        "semantic_evidence",
+        "delegate",
+        "missing_info_ask",
+        "decoy",
+        "duplicate_restraint"
+      ],
+      "additionalProperties": false
+    },
+    "status": {
+      "enum": [
+        "PENDING - needs Roy",
+        "PASS",
+        "NO_GO"
+      ]
+    }
+  }
+}

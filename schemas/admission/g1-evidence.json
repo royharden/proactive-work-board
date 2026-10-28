@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:admission:g1-evidence",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "gate": {
+      "const": "G1"
+    },
+    "status": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/status"
+    },
+    "contracts_freeze": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "h_attestation": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "q_attestation": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "custodian_attestation": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "rights_attestations": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "pilot_attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "attempt": {
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "family_guide_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "pilot_artifacts": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "pilot_shape_validation": {
+            "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+          },
+          "raw_blind_labels": {
+            "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+          },
+          "raw_agreement_numerator": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "raw_agreement_denominator": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "raw_agreement": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "pre_adjudication_preserved": {
+            "type": "boolean"
+          },
+          "adjudications": {
+            "anyOf": [
+              {
+                "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "attempt",
+          "family_guide_sha256",
+          "pilot_artifacts",
+          "pilot_shape_validation",
+          "raw_blind_labels",
+          "raw_agreement_numerator",
+          "raw_agreement_denominator",
+          "raw_agreement",
+          "pre_adjudication_preserved",
+          "adjudications"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 2
+    },
+    "final_raw_agreement": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "pilot_retirement_record": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "custodian_disposition": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/attribution"
+    }
+  },
+  "required": [
+    "schema_version",
+    "gate",
+    "status",
+    "contracts_freeze",
+    "h_attestation",
+    "q_attestation",
+    "custodian_attestation",
+    "rights_attestations",
+    "pilot_attempts",
+    "final_raw_agreement",
+    "pilot_retirement_record",
+    "custodian_disposition"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PASS"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "final_raw_agreement": {
+            "minimum": 0.8
+          }
+        }
+      }
+    }
+  ]
+}
