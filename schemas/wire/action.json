@@ -89,8 +89,13 @@
           "minLength": 1
         },
         "topic": {
-          "type": "string",
-          "minLength": 1
+          "enum": [
+            "decision_record",
+            "dependency_state",
+            "delegation_scope",
+            "availability_window",
+            "work_window"
+          ]
         },
         "body": {
           "type": "string",

@@ -302,9 +302,13 @@
               }
             },
             "topic": {
-              "type": [
-                "string",
-                "null"
+              "enum": [
+                "decision_record",
+                "dependency_state",
+                "delegation_scope",
+                "availability_window",
+                "work_window",
+                null
               ]
             }
           },
@@ -330,6 +334,24 @@
         "in_progress",
         "done",
         "parked"
+      ]
+    },
+    "information-topic": {
+      "enum": [
+        "decision_record",
+        "dependency_state",
+        "delegation_scope",
+        "availability_window",
+        "work_window"
+      ]
+    },
+    "equivalent-action-class": {
+      "enum": [
+        "clear_dependency",
+        "set_ready",
+        "reassign_to_delegate",
+        "request_info",
+        "evidence_comment"
       ]
     }
   }

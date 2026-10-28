@@ -327,9 +327,13 @@
                 }
               },
               "topic": {
-                "type": [
-                  "string",
-                  "null"
+                "enum": [
+                  "decision_record",
+                  "dependency_state",
+                  "delegation_scope",
+                  "availability_window",
+                  "work_window",
+                  null
                 ]
               }
             },

@@ -52,7 +52,18 @@
     "comments": {
       "type": "array",
       "items": {
-        "$ref": "urn:workboard:v1:scenario:common#/$defs/comment"
+        "allOf": [
+          {
+            "$ref": "urn:workboard:v1:scenario:common#/$defs/comment"
+          },
+          {
+            "properties": {
+              "origin": {
+                "const": "initial"
+              }
+            }
+          }
+        ]
       },
       "minItems": 0
     },

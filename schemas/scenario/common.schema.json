@@ -171,6 +171,33 @@
               "type": "null"
             }
           ]
+        },
+        "work_window": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "start_tick": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 96
+                },
+                "end_tick": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 96
+                }
+              },
+              "required": [
+                "start_tick",
+                "end_tick"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -182,7 +209,8 @@
         "status",
         "assignee_id",
         "not_before_tick",
-        "wait_reason"
+        "wait_reason",
+        "work_window"
       ],
       "additionalProperties": false
     },
@@ -245,11 +273,18 @@
           "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
         },
         "actor_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128,
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
-          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+              "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "body": {
           "type": "string",
@@ -260,6 +295,65 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 96
+        },
+        "actor_role": {
+          "enum": [
+            "human",
+            "world",
+            "agent",
+            "rules"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "initial",
+            "exogenous",
+            "arm"
+          ]
+        },
+        "source_event_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+              "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_proposal_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+              "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cites": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:workboard:v1:scenario:common#/$defs/record_ref"
+          }
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "$ref": "urn:workboard:v1:scenario:common#/$defs/information_topic"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -268,9 +362,113 @@
         "task_id",
         "actor_id",
         "body",
-        "occurred_tick"
+        "occurred_tick",
+        "actor_role",
+        "origin",
+        "source_event_id",
+        "source_proposal_id",
+        "cites",
+        "topic"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "actor_role": {
+                "const": "human"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "actor_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "actor_id": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "origin": {
+                "const": "arm"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "actor_role": {
+                "enum": [
+                  "agent",
+                  "rules"
+                ]
+              },
+              "source_proposal_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+              },
+              "source_event_id": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "actor_role": {
+                "enum": [
+                  "human",
+                  "world"
+                ]
+              },
+              "source_proposal_id": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "origin": {
+                "const": "exogenous"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source_event_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "source_event_id": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
     },
     "document": {
       "type": "object",
@@ -483,43 +681,55 @@
       "additionalProperties": false
     },
     "record_ref": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "enum": [
-            "project",
-            "task",
-            "dependency_link",
-            "comment",
-            "document",
-            "person",
-            "availability",
-            "delegation"
-          ]
+      "description": "Observation reference uses canonical plural wire kinds and versions >=0; scenario IDs remain a lexical subset. Not an initial record or receipt schema.",
+      "allOf": [
+        {
+          "$ref": "urn:workboard:v1:wire:common#/$defs/evidence-ref"
         },
-        "id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128,
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
-          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
-        },
-        "version": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "digest": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
+        {
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+              "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+            }
+          }
         }
-      },
-      "required": [
-        "kind",
-        "id",
-        "version",
-        "digest"
-      ],
-      "additionalProperties": false
+      ]
+    },
+    "information_topic": {
+      "enum": [
+        "decision_record",
+        "dependency_state",
+        "delegation_scope",
+        "availability_window",
+        "work_window"
+      ]
+    },
+    "equivalent_action_class": {
+      "enum": [
+        "clear_dependency",
+        "set_ready",
+        "reassign_to_delegate",
+        "request_info",
+        "evidence_comment"
+      ]
+    },
+    "exogenous_comment": {
+      "allOf": [
+        {
+          "$ref": "urn:workboard:v1:scenario:common#/$defs/comment"
+        },
+        {
+          "properties": {
+            "origin": {
+              "const": "exogenous"
+            }
+          }
+        }
+      ]
     }
   }
 }

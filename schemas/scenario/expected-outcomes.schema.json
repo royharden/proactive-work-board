@@ -107,11 +107,7 @@
           "safe_request_topic": {
             "anyOf": [
               {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128,
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
-                "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                "$ref": "urn:workboard:v1:scenario:common#/$defs/information_topic"
               },
               {
                 "type": "null"
@@ -690,11 +686,7 @@
             "minItems": 0
           },
           "equivalent_action_class": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 128,
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
-            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+            "$ref": "urn:workboard:v1:scenario:common#/$defs/equivalent_action_class"
           },
           "information_topic_or_target": {
             "anyOf": [

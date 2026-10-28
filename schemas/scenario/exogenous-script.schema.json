@@ -156,7 +156,7 @@
                     "const": "add_comment"
                   },
                   "record": {
-                    "$ref": "urn:workboard:v1:scenario:common#/$defs/comment"
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/exogenous_comment"
                   }
                 },
                 "required": [
@@ -267,11 +267,11 @@
       "items": {
         "enum": [
           "advance_time_only",
-          "complete_ready_task_after_visible_work_window",
-          "reply_to_request_from_visible_records"
+          "complete_ready_task_after_visible_work_window"
         ]
       },
-      "minItems": 0
+      "minItems": 0,
+      "uniqueItems": true
     },
     "f9_controls": {
       "type": "array",
@@ -412,7 +412,7 @@
                     "const": "add_comment"
                   },
                   "record": {
-                    "$ref": "urn:workboard:v1:scenario:common#/$defs/comment"
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/exogenous_comment"
                   }
                 },
                 "required": [

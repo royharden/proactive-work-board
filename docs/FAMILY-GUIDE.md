@@ -8,8 +8,9 @@ pilot/control validation are NOT RUN. This guide creates no study results.
 Read [CONTRACTS.md](CONTRACTS.md) for BoardPortV1, allowed action templates,
 approval/read-set bindings, intent epochs and mechanical effects. Read
 [SCENARIO-SPEC.md](SCENARIO-SPEC.md) for scenario fields, schemas, exogenous scripts
-and private/public projections. The latter is a provisional sibling reference at
-this package's base; INT reconciles it with the scenario package before freezing.
+and private/public projections. The scenario specification is present at this reconciled base; its private family
+values are dependency, semantic_evidence, delegate, missing_info_ask, decoy and
+duplicate_restraint. Hyphenated headings here are prose names, not serialized aliases.
 This guide defines family meaning; it does not duplicate the scenario schema.
 Immutable PLAN-M20-v1 §§2/D3–D8, 6, 7.1 and 8 remain authoritative.
 
@@ -26,6 +27,8 @@ Each example below is a deliberately incomplete illustrative prose vignette,
 required by P01 to explain the concept. It has no board/task identifiers, event
 script, label record, acceptable-outcome set, forbidden-effect set or scored truth.
 It is not a pilot, fixture, control, generated board or reusable evaluation case.
+Finite topics and action-equivalence normalization are public contracts in
+CONTRACTS; safe-topic choices and outcome truth remain private H/Q responsibilities.
 The wording is not a template for H: H must use original phrasing and graph
 structures. Family definitions constrain coverage, not a lexical cue or answer
 lookup. Examples never prescribe a B3 decision rule or model prompt.
