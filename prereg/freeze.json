@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "stage": "P01_CONTRACTS",
+  "status": "UNFROZEN",
+  "contracts_commit": null,
+  "contracts_files": [],
+  "study_commit": null,
+  "study_pins": null,
+  "frozen_utc": null,
+  "roy_unseal_decision": null,
+  "heldout_bundle_sha256": null,
+  "g1_status": "PENDING - needs Roy",
+  "g2_status": "PENDING - needs Roy",
+  "g3_status": "PENDING - needs Roy"
+}
