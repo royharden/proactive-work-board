@@ -1,0 +1,560 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:scenario:exogenous-script",
+  "title": "Observable world script and separately declared F9 controls",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "board_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+      "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+    },
+    "script_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+      "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+          },
+          "at_tick": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 72
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "operation": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "set_task_status"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                  },
+                  "status": {
+                    "enum": [
+                      "todo",
+                      "blocked",
+                      "ready",
+                      "in_progress",
+                      "done",
+                      "parked"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "task_id",
+                  "status"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "set_task_assignee"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                  },
+                  "person_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                  }
+                },
+                "required": [
+                  "kind",
+                  "task_id",
+                  "person_id"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "set_task_wait"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                  },
+                  "not_before_tick": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 96
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "wait_reason": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "task_id",
+                  "not_before_tick",
+                  "wait_reason"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "add_comment"
+                  },
+                  "record": {
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/comment"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "record"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "put_document"
+                  },
+                  "record": {
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/document"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "record"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "put_availability"
+                  },
+                  "record": {
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/availability"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "record"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "put_delegation"
+                  },
+                  "record": {
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/delegation"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "record"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "add_dependency"
+                  },
+                  "record": {
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/dependency_link"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "record"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "remove_dependency"
+                  },
+                  "dependency_link_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                  }
+                },
+                "required": [
+                  "kind",
+                  "dependency_link_id"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "required": [
+          "event_id",
+          "at_tick",
+          "order",
+          "operation"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "transition_rule_ids": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "advance_time_only",
+          "complete_ready_task_after_visible_work_window",
+          "reply_to_request_from_visible_records"
+        ]
+      },
+      "minItems": 0
+    },
+    "f9_controls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "control_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+          },
+          "kind": {
+            "enum": [
+              "human_edit_between_approval_and_apply",
+              "revert_at_plus_4"
+            ]
+          },
+          "task_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+          },
+          "operation": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "set_task_status"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                  },
+                  "status": {
+                    "enum": [
+                      "todo",
+                      "blocked",
+                      "ready",
+                      "in_progress",
+                      "done",
+                      "parked"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "task_id",
+                  "status"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "set_task_assignee"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                  },
+                  "person_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                  }
+                },
+                "required": [
+                  "kind",
+                  "task_id",
+                  "person_id"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "set_task_wait"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                  },
+                  "not_before_tick": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 96
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "wait_reason": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "task_id",
+                  "not_before_tick",
+                  "wait_reason"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "add_comment"
+                  },
+                  "record": {
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/comment"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "record"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "put_document"
+                  },
+                  "record": {
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/document"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "record"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "put_availability"
+                  },
+                  "record": {
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/availability"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "record"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "put_delegation"
+                  },
+                  "record": {
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/delegation"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "record"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "add_dependency"
+                  },
+                  "record": {
+                    "$ref": "urn:workboard:v1:scenario:common#/$defs/dependency_link"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "record"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "remove_dependency"
+                  },
+                  "dependency_link_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                  }
+                },
+                "required": [
+                  "kind",
+                  "dependency_link_id"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "required": [
+          "control_id",
+          "kind",
+          "task_id",
+          "operation"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "horizon": {
+      "type": "object",
+      "properties": {
+        "proposals_end_tick": {
+          "const": 72
+        },
+        "close_tick": {
+          "const": 96
+        },
+        "persistence_delay_hours": {
+          "const": 8
+        },
+        "revert_delay_hours": {
+          "const": 4
+        },
+        "sweep_interval_hours": {
+          "const": 4
+        }
+      },
+      "required": [
+        "proposals_end_tick",
+        "close_tick",
+        "persistence_delay_hours",
+        "revert_delay_hours",
+        "sweep_interval_hours"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "board_id",
+    "script_id",
+    "events",
+    "transition_rule_ids",
+    "f9_controls",
+    "horizon"
+  ],
+  "additionalProperties": false
+}

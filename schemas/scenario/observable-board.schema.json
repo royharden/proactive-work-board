@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:scenario:observable-board",
+  "title": "Runtime-visible initial board; no private metadata",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "board_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+      "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+    },
+    "initial_tick": {
+      "const": 0
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:scenario:common#/$defs/project"
+      },
+      "minItems": 2,
+      "maxItems": 3
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:scenario:common#/$defs/task"
+      },
+      "minItems": 30,
+      "maxItems": 30
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:scenario:common#/$defs/person"
+      },
+      "minItems": 4,
+      "maxItems": 6
+    },
+    "dependency_links": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:scenario:common#/$defs/dependency_link"
+      },
+      "minItems": 8,
+      "maxItems": 12
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:scenario:common#/$defs/comment"
+      },
+      "minItems": 0
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:scenario:common#/$defs/document"
+      },
+      "minItems": 3,
+      "maxItems": 6
+    },
+    "availability": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:scenario:common#/$defs/availability"
+      },
+      "minItems": 0
+    },
+    "delegations": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:scenario:common#/$defs/delegation"
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "schema_version",
+    "board_id",
+    "initial_tick",
+    "projects",
+    "tasks",
+    "people",
+    "dependency_links",
+    "comments",
+    "documents",
+    "availability",
+    "delegations"
+  ],
+  "additionalProperties": false
+}

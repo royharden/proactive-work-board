@@ -1,0 +1,525 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:scenario:common",
+  "title": "Scenario shared data definitions",
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+      "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+    },
+    "tick": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 96
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "interval": {
+      "type": "object",
+      "properties": {
+        "start_tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 96
+        },
+        "end_tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 96
+        }
+      },
+      "required": [
+        "start_tick",
+        "end_tick"
+      ],
+      "additionalProperties": false
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "person": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "display_name"
+      ],
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "status": {
+          "enum": [
+            "todo",
+            "blocked",
+            "ready",
+            "in_progress",
+            "done",
+            "parked"
+          ]
+        },
+        "assignee_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+              "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "not_before_tick": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 96
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wait_reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "project_id",
+        "title",
+        "description",
+        "status",
+        "assignee_id",
+        "not_before_tick",
+        "wait_reason"
+      ],
+      "additionalProperties": false
+    },
+    "dependency_link": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "depends_on_task_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "task_id",
+        "depends_on_task_id"
+      ],
+      "additionalProperties": false
+    },
+    "comment": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "actor_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "occurred_tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 96
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "task_id",
+        "actor_id",
+        "body",
+        "occurred_tick"
+      ],
+      "additionalProperties": false
+    },
+    "document": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "task_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+          },
+          "minItems": 0
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "effective_interval": {
+          "type": "object",
+          "properties": {
+            "start_tick": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 96
+            },
+            "end_tick": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 96
+            }
+          },
+          "required": [
+            "start_tick",
+            "end_tick"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "project_id",
+        "task_ids",
+        "title",
+        "body",
+        "effective_interval"
+      ],
+      "additionalProperties": false
+    },
+    "availability": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "person_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "effective_interval": {
+          "type": "object",
+          "properties": {
+            "start_tick": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 96
+            },
+            "end_tick": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 96
+            }
+          },
+          "required": [
+            "start_tick",
+            "end_tick"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "person_id",
+        "available",
+        "effective_interval"
+      ],
+      "additionalProperties": false
+    },
+    "delegation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "from_person_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "to_person_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "scope": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "task",
+                "project"
+              ]
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+              "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        "effective_interval": {
+          "type": "object",
+          "properties": {
+            "start_tick": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 96
+            },
+            "end_tick": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 96
+            }
+          },
+          "required": [
+            "start_tick",
+            "end_tick"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "from_person_id",
+        "to_person_id",
+        "scope",
+        "effective_interval"
+      ],
+      "additionalProperties": false
+    },
+    "record_ref": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "project",
+            "task",
+            "dependency_link",
+            "comment",
+            "document",
+            "person",
+            "availability",
+            "delegation"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "version",
+        "digest"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
