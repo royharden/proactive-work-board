@@ -1,7 +1,10 @@
 # M20 preregistration skeleton — UNFROZEN
 
 Construction document only. No preregistration or study admission is complete.
-`freeze.json` has null commit/authority pins; G1/G2/G3 are PENDING — needs Roy.
+`freeze.json` separates a documentary P01 source pin from the G3 study freeze.
+contracts_commit/file hashes are not study admission: study_status remains
+UNFROZEN, study/model/prompt/call-slot/seal authority is unset, and G1/G2/G3
+are PENDING — needs Roy at this construction handoff.
 No boards, answers, call slots, live settings, prompt or scoring implementation
 is supplied. The immutable PLAN-M20-v1 remains the source contract. Fill this
 skeleton only under a later bounded grant before exposure or paid calls.
@@ -9,8 +12,9 @@ skeleton only under a later bounded grant before exposure or paid calls.
 ## Pending identity and freeze fields
 
 - [ ] Edition digest, independent H/Q/custodian identities, actual G1/G2 evidence.
-- [ ] Combined P01 contracts commit and exact file hashes (earlier source commit,
-  recorded in a later freeze-record commit); reconciled FAMILY-GUIDE and schemas.
+- P01 source commit/file hashes are recorded separately in freeze.json at a later
+  commit. Verify them against the earlier source before H's handoff. That map
+  pins four contract documents and all schemas, not this unfinished skeleton.
 - [ ] ONE common study commit for this preregistration, B3 rulebook, agent prompt,
   agent schema/settings and call slots; exact file hashes in a later G3 record.
 - [ ] Model/provider/settings, dated complete billing bound, live authority and

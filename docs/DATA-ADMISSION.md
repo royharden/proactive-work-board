@@ -45,15 +45,21 @@ Data-only draft 2020-12 schemas are under `../schemas/admission/`, with IDs
 | admission-record | Complete section 6.5 record tying actors, evidence, rights, hashes, freeze/custody and single-unseal log together |
 | freeze | Separate P01 contract pin and eventual G3 study pin, without a self-referential commit |
 
-Resolve schema URNs locally; never fetch over the network. The only cross-family
-reference is the already accepted `urn:workboard:v1:scenario:private-split-inventory`.
-No nonexistent wire `record-ref` schema is introduced. Artifact references name
+Load all three local schema catalogs: wire, scenario AND admission. Never fetch
+URNs over the network. Admission references the accepted
+`urn:workboard:v1:scenario:private-split-inventory`; scenario also composes wire
+evidence/topic/class definitions. Scenario-only loading is incomplete. Canonical
+evidence URI: `urn:workboard:v1:wire:common#/$defs/evidence-ref`, not a nonexistent
+standalone wire record-ref schema. Artifact references name
 location, SHA256, visibility, attributed recorder and UTC. Locations are opaque
 provenance references, not permission to read private data or send it elsewhere.
 
 These schemas describe complete future evidence documents. They are not filled
-pending evidence records. The sole instance supplied is `prereg/freeze.json`:
-UNFROZEN, null commits/pins/time/authority, and all gates pending. There is no
+pending evidence records. The sole instance supplied is `prereg/freeze.json`.
+It separates documentary P01 source pinning from G3 study state: a P01 FROZEN
+record identifies earlier contract bytes, not admitted data. At this handoff
+study_status is UNFROZEN, study/seal authority is unset and all gates pending.
+There is no
 authored `admission.json`, seal, attestation, audit table, pilot or control here.
 
 Keep raw H labels, private expected outcomes, audit/adjudication data, canaries,
@@ -163,18 +169,32 @@ ordering require later validation; these schemas do not prove them.
 
 ## P01 freeze and later G3 single unseal
 
-`prereg/freeze.json` intentionally has no pins. After all four P01 slices are
-integrated and reconciled, INT authorizes a bounded documentation-only update:
-record the prior combined contracts commit and exact contract file SHA256s,
-then commit that freeze record in a later commit. Never put the containing
+The authorized P01 closeout commits reconciled source BEFORE recording its pin.
+`prereg/freeze.json` then names that earlier combined source commit and exact
+contract file SHA256s in a SEPARATE later commit. contract_pin_authority records
+INT's delegated documentary instruction and the recorder's identity/session;
+it is NOT personally signed by Roy or independent admission evidence.
+contracts_hash_basis=git_blob_bytes means exact bytes stored for each path at
+contracts_commit. Materialize and deliver those bytes without automatic newline
+conversion; a platform checkout with changed line endings is not the hashed
+artifact. No normalization is applied while computing or checking the map.
+Never put the containing
 commit's hash into itself. Verify files at the earlier commit; only then hand
-the pinned contracts to H. Do not rename a draft to FROZEN without those pins.
+the pinned contracts to H. Scope is all four P01 documents (CONTRACTS,
+SCENARIO-SPEC, FAMILY-GUIDE, DATA-ADMISSION) and every wire/scenario/admission
+JSON Schema. Exclude the pin record itself, README navigation and the unfinished
+preregistration skeleton from H's contract map. Do not declare FROZEN without
+the actual earlier-commit pin. G1/G2/G3 remain PENDING - needs Roy.
 
 P01 contract freeze is distinct from the later G3 study freeze. G3 requires
 PREREG, B3 rules, agent prompt/schema/settings and call slots committed/hashed
 at ONE common study commit. Agent prompts freeze even for a deterministic-only
 unseal. The freeze-record commit can be later; study pins refer to that earlier
 common source commit. Add no call-slot/settings/prompt implementation now.
+For stage=P01_CONTRACTS, status=FROZEN means documentary source only;
+study_status stays UNFROZEN. study_commit, study_pins, roy_unseal_decision and
+heldout_bundle_sha256 stay null. frozen_utc is this documentary record's time,
+not a dataset seal or G3 admission. A P01 pin can precede G1 without passing it.
 
 Before opening held-out: actual G1/G2 passed, digest matches seal, study freeze
 complete, and Roy's R-07 decision recorded. It must authorize funded exact slots
@@ -186,14 +206,53 @@ The empty log shape is not an executed or authorized unseal. After exposure,
 prompt/rule changes require a fresh H edition; bugs found after P13 go to
 LIMITATIONS rather than rerunning held-out.
 
-## Remaining seams and deferred checks
+## Authoring from the reconciled contracts
 
-INT owns combined P01 reconciliation: scenario singular vs wire plural kinds,
-common evidence-ref URI and version policy, dependency field mapping, comment
-actor/citation provenance, public transition/work-window semantics and finite
-request-topic/equivalent-action vocabularies. This package changes none of them.
-Handoff is blocked until combined contracts actually pin; this is not permission
-to stall other disjoint documentation construction or start product work.
+The accepted CONTRACTS/SCENARIO-SPEC define these boundaries; this is handoff
+guidance, not a second implementation or permission to change those definitions:
+
+- Observed reference kinds are plural storage names; private scorer selectors
+  use SCENARIO-SPEC's total singular-to-plural mapping. Delegation scope.kind is
+  a separate task|project domain. Initial versions are >=1, observation refs may
+  have version0, never an absent-row sentinel or a coerced initial record.
+- Initial/exogenous depends_on_task_id maps to dependency_task_id at BOTH
+  observable projection and compiled deletion, retaining exact link/task/version
+  binding. These names are not aliases within either closed shape. Private
+  selectors use that explicit mapping; absent fields cannot count as success.
+- Evidence/citation digests hash the complete projected versioned observable
+  payload using CONTRACTS' canonical serializer: sorted keys, UTF-8 without BOM,
+  compact separators, unescaped Unicode, array order preserved, integer numeric
+  record data. Project/rename BEFORE hashing; never reuse a preprojection digest.
+  Artifact/file SHA256s (including this P01 map) instead bind EXACT bytes, with
+  no newline normalization or JSON reserialization.
+- Comments retain role/origin, actor_id, source_event_id/source_proposal_id,
+  cites and topic. Human IDs resolve actual fictional board people; world/agent/
+  rules actor IDs are null, never invented people. Initial/exogenous roles are
+  human/world, and source IDs/ticks follow their actual enclosing origin. Arm
+  origin binds the exact proposal/journal. Private arm means agent|rules for the
+  evaluated arm only, not every similarly named comment. Initial/exogenous empty
+  cites/null topic are explicit, never inferred from prose or private truth.
+  Retain declared host insertion metadata; body/cites/topic/provenance are not noise.
+- Tasks require nullable work_window. Null permits no automatic completion;
+  nonnull uses the visible start/continuous/end conditions and tick ordering in
+  CONTRACTS. Supported IDs are advance_time_only and
+  complete_ready_task_after_visible_work_window; replies are explicit exogenous
+  facts with provenance, never supplied by a hidden-answer transition.
+- Starts are ticks0..96; half-open endpoints may reach boundary97 to contain
+  close96.97 is never a clock/event tick; work windows end<=96 and new proposals
+  stop before72. End96 excludes instant96. Never invent inclusive-end exceptions
+  or discard close checks when authoring private within predicates.
+- Finite topics and five action-equivalence classes/normalization are now
+  defined in wire common and CONTRACTS, referenced by scenario definitions.
+  Independent grouping uses actual primitive effects and observed epochs,
+  never controller keys or public exposure of private grouping truth.
+- Fixed40decoys across20boards with minimum2perboard means EXACTLY2perboard,
+  including >=1near-miss. Other family mix varies inside the frozen split totals.
+
+No admission-schema change is required for those upstream mappings. Their real
+instance/semantic validation remains deferred. Frozen handoff uses the actual
+earlier source commit/file map; descriptive alignment does not prove rights,
+custody, data validity, code execution or any admission gate.
 
 NOT RUN: schema dialect/instance validation, H pilots/Q controls, identity/rights
 verification, cross-record/content hash and agreement/kappa calculations,

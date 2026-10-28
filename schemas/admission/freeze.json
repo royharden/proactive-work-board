@@ -231,6 +231,50 @@
     },
     "g3_status": {
       "$ref": "urn:workboard:v1:admission:common#/$defs/status"
+    },
+    "study_status": {
+      "enum": [
+        "UNFROZEN",
+        "FROZEN"
+      ],
+      "description": "Separate G3 study state; a documentary P01 source pin never freezes the study."
+    },
+    "contracts_hash_basis": {
+      "const": "git_blob_bytes",
+      "description": "SHA256 of exact file bytes stored at contracts_commit; handoff must materialize those bytes without newline conversion."
+    },
+    "contract_pin_authority": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "grant_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "delegated_by": {
+              "type": "string",
+              "minLength": 1
+            },
+            "recorded_by": {
+              "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+            },
+            "statement": {
+              "const": "INT delegated documentary P01 pin; NOT personally signed by Roy; no admission or unseal authority."
+            }
+          },
+          "required": [
+            "grant_id",
+            "delegated_by",
+            "recorded_by",
+            "statement"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "required": [
@@ -283,6 +327,12 @@
           },
           "g3_status": {
             "const": "PENDING - needs Roy"
+          },
+          "study_status": {
+            "const": "UNFROZEN"
+          },
+          "contract_pin_authority": {
+            "const": null
           }
         }
       },
@@ -298,8 +348,39 @@
           "frozen_utc": {
             "type": "string",
             "format": "date-time"
+          },
+          "contract_pin_authority": {
+            "type": "object",
+            "properties": {
+              "grant_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "delegated_by": {
+                "type": "string",
+                "minLength": 1
+              },
+              "recorded_by": {
+                "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+              },
+              "statement": {
+                "const": "INT delegated documentary P01 pin; NOT personally signed by Roy; no admission or unseal authority."
+              }
+            },
+            "required": [
+              "grant_id",
+              "delegated_by",
+              "recorded_by",
+              "statement"
+            ],
+            "additionalProperties": false
           }
-        }
+        },
+        "required": [
+          "study_status",
+          "contracts_hash_basis",
+          "contract_pin_authority"
+        ]
       }
     },
     {
@@ -326,6 +407,9 @@
           },
           "g3_status": {
             "const": "PENDING - needs Roy"
+          },
+          "study_status": {
+            "const": "UNFROZEN"
           }
         }
       }
@@ -484,6 +568,9 @@
           },
           "g3_status": {
             "const": "PASS"
+          },
+          "study_status": {
+            "const": "FROZEN"
           }
         }
       }
