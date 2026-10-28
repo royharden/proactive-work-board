@@ -1,0 +1,774 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:scenario:expected-outcomes",
+  "title": "PRIVATE scorer truth; never a runtime board extension",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "board_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+      "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+    },
+    "observable_board_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "exogenous_script_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "canary": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 256
+    },
+    "opportunities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "opportunity_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+          },
+          "task_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+          },
+          "family": {
+            "enum": [
+              "dependency",
+              "semantic_evidence",
+              "delegate",
+              "missing_info_ask",
+              "decoy",
+              "duplicate_restraint"
+            ]
+          },
+          "near_miss": {
+            "type": "boolean"
+          },
+          "resolution_eligible": {
+            "type": "boolean"
+          },
+          "should_act": {
+            "type": "boolean"
+          },
+          "validity_window": {
+            "type": "object",
+            "properties": {
+              "start_tick": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 96
+              },
+              "end_tick": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 96
+              }
+            },
+            "required": [
+              "start_tick",
+              "end_tick"
+            ],
+            "additionalProperties": false
+          },
+          "action_types": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "clear_dependency",
+                "set_ready",
+                "reassign_to_delegate",
+                "request_info",
+                "evidence_comment"
+              ]
+            },
+            "minItems": 0
+          },
+          "ambiguity": {
+            "enum": [
+              "decidable",
+              "ambiguous"
+            ]
+          },
+          "safe_request_topic": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "acceptable_outcome_sets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "predicates": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "op": {
+                            "const": "field_in"
+                          },
+                          "row": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "enum": [
+                                  "project",
+                                  "task",
+                                  "dependency_link",
+                                  "comment",
+                                  "document",
+                                  "person",
+                                  "availability",
+                                  "delegation"
+                                ]
+                              },
+                              "id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                                "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "id"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "field": {
+                            "enum": [
+                              "status",
+                              "assignee_id",
+                              "not_before_tick",
+                              "wait_reason",
+                              "title",
+                              "description",
+                              "body",
+                              "available",
+                              "task_id",
+                              "depends_on_task_id",
+                              "person_id",
+                              "from_person_id",
+                              "to_person_id",
+                              "project_id",
+                              "display_name",
+                              "occurred_tick"
+                            ]
+                          },
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "type": [
+                                "string",
+                                "integer",
+                                "boolean",
+                                "null"
+                              ]
+                            },
+                            "minItems": 1
+                          }
+                        },
+                        "required": [
+                          "op",
+                          "row",
+                          "field",
+                          "values"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "op": {
+                            "const": "link_absent"
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                          },
+                          "depends_on_task_id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                          }
+                        },
+                        "required": [
+                          "op",
+                          "task_id",
+                          "depends_on_task_id"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "op": {
+                            "const": "assignee_is"
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                          },
+                          "person_id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                          }
+                        },
+                        "required": [
+                          "op",
+                          "task_id",
+                          "person_id"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "op": {
+                            "const": "comment_exists"
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                          },
+                          "actor_role": {
+                            "enum": [
+                              "arm",
+                              "human",
+                              "world"
+                            ]
+                          },
+                          "cites_record": {
+                            "$ref": "urn:workboard:v1:scenario:common#/$defs/record_ref"
+                          }
+                        },
+                        "required": [
+                          "op",
+                          "task_id",
+                          "actor_role",
+                          "cites_record"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "op": {
+                            "const": "unchanged"
+                          },
+                          "rows": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "enum": [
+                                    "project",
+                                    "task",
+                                    "dependency_link",
+                                    "comment",
+                                    "document",
+                                    "person",
+                                    "availability",
+                                    "delegation"
+                                  ]
+                                },
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128,
+                                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                                  "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "minItems": 1
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "enum": [
+                                "status",
+                                "assignee_id",
+                                "not_before_tick",
+                                "wait_reason",
+                                "title",
+                                "description",
+                                "body",
+                                "effective_interval",
+                                "available",
+                                "scope",
+                                "task_id",
+                                "depends_on_task_id",
+                                "person_id",
+                                "from_person_id",
+                                "to_person_id",
+                                "project_id",
+                                "task_ids",
+                                "display_name",
+                                "occurred_tick"
+                              ]
+                            },
+                            "minItems": 1
+                          }
+                        },
+                        "required": [
+                          "op",
+                          "rows",
+                          "fields"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "op": {
+                            "const": "within"
+                          },
+                          "tick_window": {
+                            "type": "object",
+                            "properties": {
+                              "start_tick": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 96
+                              },
+                              "end_tick": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 96
+                              }
+                            },
+                            "required": [
+                              "start_tick",
+                              "end_tick"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "op",
+                          "tick_window"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "predicates"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0
+          },
+          "forbidden_effects": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "const": "field_in"
+                    },
+                    "row": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "enum": [
+                            "project",
+                            "task",
+                            "dependency_link",
+                            "comment",
+                            "document",
+                            "person",
+                            "availability",
+                            "delegation"
+                          ]
+                        },
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                          "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "id"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "field": {
+                      "enum": [
+                        "status",
+                        "assignee_id",
+                        "not_before_tick",
+                        "wait_reason",
+                        "title",
+                        "description",
+                        "body",
+                        "available",
+                        "task_id",
+                        "depends_on_task_id",
+                        "person_id",
+                        "from_person_id",
+                        "to_person_id",
+                        "project_id",
+                        "display_name",
+                        "occurred_tick"
+                      ]
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": [
+                          "string",
+                          "integer",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "minItems": 1
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "row",
+                    "field",
+                    "values"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "const": "link_absent"
+                    },
+                    "task_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                      "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                    },
+                    "depends_on_task_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                      "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "task_id",
+                    "depends_on_task_id"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "const": "assignee_is"
+                    },
+                    "task_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                      "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                    },
+                    "person_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                      "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "task_id",
+                    "person_id"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "const": "comment_exists"
+                    },
+                    "task_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                      "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                    },
+                    "actor_role": {
+                      "enum": [
+                        "arm",
+                        "human",
+                        "world"
+                      ]
+                    },
+                    "cites_record": {
+                      "$ref": "urn:workboard:v1:scenario:common#/$defs/record_ref"
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "task_id",
+                    "actor_role",
+                    "cites_record"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "const": "unchanged"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "enum": [
+                              "project",
+                              "task",
+                              "dependency_link",
+                              "comment",
+                              "document",
+                              "person",
+                              "availability",
+                              "delegation"
+                            ]
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "id"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "enum": [
+                          "status",
+                          "assignee_id",
+                          "not_before_tick",
+                          "wait_reason",
+                          "title",
+                          "description",
+                          "body",
+                          "effective_interval",
+                          "available",
+                          "scope",
+                          "task_id",
+                          "depends_on_task_id",
+                          "person_id",
+                          "from_person_id",
+                          "to_person_id",
+                          "project_id",
+                          "task_ids",
+                          "display_name",
+                          "occurred_tick"
+                        ]
+                      },
+                      "minItems": 1
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "rows",
+                    "fields"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "const": "within"
+                    },
+                    "tick_window": {
+                      "type": "object",
+                      "properties": {
+                        "start_tick": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 96
+                        },
+                        "end_tick": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 96
+                        }
+                      },
+                      "required": [
+                        "start_tick",
+                        "end_tick"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "tick_window"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "minItems": 0
+          },
+          "equivalent_action_class": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+          },
+          "information_topic_or_target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "blocker_epoch_observed_transitions": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:workboard:v1:scenario:common#/$defs/record_ref"
+            },
+            "minItems": 0
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:workboard:v1:scenario:common#/$defs/record_ref"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "opportunity_id",
+          "task_id",
+          "family",
+          "near_miss",
+          "resolution_eligible",
+          "should_act",
+          "validity_window",
+          "action_types",
+          "ambiguity",
+          "safe_request_topic",
+          "acceptable_outcome_sets",
+          "forbidden_effects",
+          "equivalent_action_class",
+          "information_topic_or_target",
+          "blocker_epoch_observed_transitions",
+          "evidence_refs"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 7,
+      "maxItems": 10
+    },
+    "background_task_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+        "description": "Opaque random identifier; no family, eligibility, answer, split or canary encoding."
+      },
+      "minItems": 20,
+      "maxItems": 23
+    }
+  },
+  "required": [
+    "schema_version",
+    "board_id",
+    "observable_board_sha256",
+    "exogenous_script_sha256",
+    "canary",
+    "opportunities",
+    "background_task_ids"
+  ],
+  "additionalProperties": false
+}
