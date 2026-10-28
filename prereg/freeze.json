@@ -1,15 +1,124 @@
 {
   "schema_version": "1",
   "stage": "P01_CONTRACTS",
-  "status": "UNFROZEN",
-  "contracts_commit": null,
-  "contracts_files": [],
+  "status": "FROZEN",
+  "contracts_commit": "168110be381bd51981310860700bd5a4eac21aa5",
+  "contracts_files": [
+    {
+      "path": "docs/CONTRACTS.md",
+      "sha256": "2384fb95e08639b4bb0351c6becd04b45cf13af6a6d4b7a937036275ff9ce00d"
+    },
+    {
+      "path": "docs/DATA-ADMISSION.md",
+      "sha256": "f5429de3a0081e7914afec77a7bed9e521234aea0edddfe188f795086a2fc29f"
+    },
+    {
+      "path": "docs/FAMILY-GUIDE.md",
+      "sha256": "f3b412b8239a6b6bd8df9e4fc9ce1e9309f716ae032046b042891fb51cbf4516"
+    },
+    {
+      "path": "docs/SCENARIO-SPEC.md",
+      "sha256": "7920c3cbedb8f7f76877bc43b3aa163bb70da0fc05944b23aa5188e69d575414"
+    },
+    {
+      "path": "schemas/admission/admission-record.json",
+      "sha256": "3e7f85aaad78652843e95b883f1bd36adb890ccc1ed447802371b7e19c8d6af2"
+    },
+    {
+      "path": "schemas/admission/attestation.json",
+      "sha256": "fe80182fc188d8d1147bd1e86c3270a3e8cd62add8bb06c8d701ff42d0cb0c71"
+    },
+    {
+      "path": "schemas/admission/common.json",
+      "sha256": "b041c8342a3de5d5895f7279e2657c02152c2d537a79b469936067da49713a29"
+    },
+    {
+      "path": "schemas/admission/freeze.json",
+      "sha256": "f4392baff7dbe6be41826fa065727647ac2a75ecd25f8c94b69384f850cb54bc"
+    },
+    {
+      "path": "schemas/admission/g1-evidence.json",
+      "sha256": "46ad39d4d00aa840d9d1a61b78aa7ca899c9289bcd8fd69edbbd7996033f618b"
+    },
+    {
+      "path": "schemas/admission/g2-evidence.json",
+      "sha256": "08d2f03f8fd766a918231c1f4c0dcd44d28bf5d201009091f1d51c19dd19be78"
+    },
+    {
+      "path": "schemas/scenario/common.schema.json",
+      "sha256": "858582858cec9d7b2992ce0424dd840b7ce3f6f7ec6a3bf1105cee9c32385788"
+    },
+    {
+      "path": "schemas/scenario/exogenous-script.schema.json",
+      "sha256": "352bb80b276b575c47a7c79fb28f3caa6dcf0be88104a335429d06a1fe35e2c4"
+    },
+    {
+      "path": "schemas/scenario/expected-outcomes.schema.json",
+      "sha256": "10fcccd7f496c6e45db272a49a289ac324e5d53cb989ff9ce14df139e8190fda"
+    },
+    {
+      "path": "schemas/scenario/observable-board.schema.json",
+      "sha256": "d5ea8c0c7dd3134398c3187eaadf5da638b20692220a0848544d54cee5043899"
+    },
+    {
+      "path": "schemas/scenario/private-split-inventory.schema.json",
+      "sha256": "1fb5510d1f0590ee96444d1d03277f9deabc009b86d10ec2ff0f6e4d0c9cd081"
+    },
+    {
+      "path": "schemas/wire/action.json",
+      "sha256": "f584e2e4a2c13eca1db849c47bfcc743122859b4b1e56a2871ac5ee3f93093f1"
+    },
+    {
+      "path": "schemas/wire/apply-receipt.json",
+      "sha256": "3470ba48904048e23312f95fb6a88904041a7215bf58a84e063bf0d6257f042a"
+    },
+    {
+      "path": "schemas/wire/approved-bundle.json",
+      "sha256": "9aff1880ea47cb9c1322c1e76a7cf57ef9c18920af79eb26b260bbed9579205d"
+    },
+    {
+      "path": "schemas/wire/candidate-bundle.json",
+      "sha256": "c2e4d691057ef3ae99454f026b506f1adfb509506ed288eabbae8f59df780a6b"
+    },
+    {
+      "path": "schemas/wire/common.json",
+      "sha256": "fa384237413f5febfb85f84a2e60a3ba1d9b742657367e6ba04810f0ff7b9a1e"
+    },
+    {
+      "path": "schemas/wire/decision.json",
+      "sha256": "ef4d79075fb7dd1b9005bbf724feefa409a56f957bbff21265acb624bc334c72"
+    },
+    {
+      "path": "schemas/wire/effect-record.json",
+      "sha256": "9bb569d79b684536ed1e055ddd2ed6bd97b10334004db8d48fe8be8498ae8619"
+    },
+    {
+      "path": "schemas/wire/event.json",
+      "sha256": "2ef15bffb9c00e653833f472878c15c9777ec2de7c8b4097164f83fdd2c1b2a6"
+    },
+    {
+      "path": "schemas/wire/proposal.json",
+      "sha256": "e663aa7c97ea8a446331a290aa1ccccb287a1cbf477df6cf7b1ebba45edcc070"
+    }
+  ],
   "study_commit": null,
   "study_pins": null,
-  "frozen_utc": null,
+  "frozen_utc": "2026-10-28T14:46:00.097712+00:00",
   "roy_unseal_decision": null,
   "heldout_bundle_sha256": null,
   "g1_status": "PENDING - needs Roy",
   "g2_status": "PENDING - needs Roy",
-  "g3_status": "PENDING - needs Roy"
+  "g3_status": "PENDING - needs Roy",
+  "study_status": "UNFROZEN",
+  "contracts_hash_basis": "git_blob_bytes",
+  "contract_pin_authority": {
+    "grant_id": "M20-DIRTY-20261028/assignments/M20-DL2-p01-freeze.md",
+    "delegated_by": "0B34_Codex_gpt-61-sol_N20IntM20",
+    "recorded_by": {
+      "callsign": "0003_Codex_gpt-61-sol_N20M20DL2_D2",
+      "session_id": "01a18131-8160-7c51-8242-4e06da97679d",
+      "harness": "Codex"
+    },
+    "statement": "INT delegated documentary P01 pin; NOT personally signed by Roy; no admission or unseal authority."
+  }
 }
