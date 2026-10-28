@@ -75,8 +75,8 @@
               },
               "end_tick": {
                 "type": "integer",
-                "minimum": 0,
-                "maximum": 96
+                "minimum": 1,
+                "maximum": 97
               }
             },
             "required": [
@@ -175,7 +175,13 @@
                               "to_person_id",
                               "project_id",
                               "display_name",
-                              "occurred_tick"
+                              "occurred_tick",
+                              "actor_id",
+                              "actor_role",
+                              "origin",
+                              "source_event_id",
+                              "source_proposal_id",
+                              "topic"
                             ]
                           },
                           "values": {
@@ -348,7 +354,15 @@
                                 "project_id",
                                 "task_ids",
                                 "display_name",
-                                "occurred_tick"
+                                "occurred_tick",
+                                "actor_id",
+                                "actor_role",
+                                "origin",
+                                "source_event_id",
+                                "source_proposal_id",
+                                "cites",
+                                "topic",
+                                "work_window"
                               ]
                             },
                             "minItems": 1
@@ -377,8 +391,8 @@
                               },
                               "end_tick": {
                                 "type": "integer",
-                                "minimum": 0,
-                                "maximum": 96
+                                "minimum": 1,
+                                "maximum": 97
                               }
                             },
                             "required": [
@@ -462,7 +476,13 @@
                         "to_person_id",
                         "project_id",
                         "display_name",
-                        "occurred_tick"
+                        "occurred_tick",
+                        "actor_id",
+                        "actor_role",
+                        "origin",
+                        "source_event_id",
+                        "source_proposal_id",
+                        "topic"
                       ]
                     },
                     "values": {
@@ -635,7 +655,15 @@
                           "project_id",
                           "task_ids",
                           "display_name",
-                          "occurred_tick"
+                          "occurred_tick",
+                          "actor_id",
+                          "actor_role",
+                          "origin",
+                          "source_event_id",
+                          "source_proposal_id",
+                          "cites",
+                          "topic",
+                          "work_window"
                         ]
                       },
                       "minItems": 1
@@ -664,8 +692,8 @@
                         },
                         "end_tick": {
                           "type": "integer",
-                          "minimum": 0,
-                          "maximum": 96
+                          "minimum": 1,
+                          "maximum": 97
                         }
                       },
                       "required": [

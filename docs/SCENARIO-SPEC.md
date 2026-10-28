@@ -1,11 +1,5 @@
 # Scenario contract v1
 
-WRAP CHECKPOINT: reconciliation is INCOMPLETE, NOT READY for combined freeze.
-The CONTRACTS transition/normalization definitions referred to in the new mapping
-section have not yet been written. New topic/class enum shapes are provisional
-until those definitions and a fresh static review are completed. No compatibility
-or acceptance pass is asserted for this partial checkpoint.
-
 P01 data-only draft for the immutable PLAN-M20-v1, sections 2 D8/D13,
 4, 6, 7.1 and 8. This document specifies shapes, not authored scenarios,
 answers, pilots or controls. P01 stays UNFROZEN until INT reconciles and pins
@@ -88,7 +82,9 @@ facts such as task status/assignee/wait changes, comments, documents,
 availability/delegation changes or dependency changes. No SQL, arbitrary patch
 path, source code, scorer predicate or latent-correctness condition is accepted.
 Version changes and host Event emission are future host responsibilities;
-script records must not overwrite current versions blindly.
+script records must not overwrite current versions blindly. CONTRACTS specifies
+insert version1 versus replacement expected-current-version admission, including
+atomic host increment and outbox; mismatches are never silently accepted.
 
 Public transition identifiers are advance_time_only and
 complete_ready_task_after_visible_work_window, defined in CONTRACTS with
@@ -239,15 +235,23 @@ refusal/recovery receipts without coercing them into observable-board instances.
 A broader wire observation is not asserted to validate as scenario initial data.
 
 Initial/exogenous dependency depends_on_task_id maps to wire dependency_task_id
-only at the compiled deletion boundary. Link.id maps to write.id and task_id to
-task_id. All values must match the exact version-bound link. These property names
+at observable projection and at compiled deletion. Link.id maps to write.id and
+task_id to task_id. All values must match the exact version-bound link. These property names
 are not aliases in either closed shape. Private link_absent keeps the scenario
 field name and resolves dependency_links; it grants no wire write permission.
+Private field_in/unchanged on depends_on_task_id read the projected
+storage/wire dependency_task_id field by this explicit mapping. Other private
+field names map identically; field/kind mismatches fail admission, not missing
+values treated as satisfying a predicate. work_window/cites are structured and
+can appear only in unchanged; primitive comment provenance/topic fields can use
+field_in. Public stored provenance is not a private outcome label.
 
 Stored comments carry actor_role, nullable actor_id, origin, nullable
 source_event_id/source_proposal_id, cites, topic, body and occurred_tick alongside
 id/version/task_id. Initial origin is initial; scripted origin is exogenous with
-source_event_id equal to enclosing event_id (or F9 control_id). Arm origin is arm
+source_event_id equal to enclosing event_id (or F9 control_id), with occurred_tick
+equal to the actual event/control tick. Initial comments have occurred_tick0.
+Arm origin is arm
 with source_proposal_id equal to the exact applied proposal. Human actor_id must
 resolve an existing board person; world/agent/rules actor_id is null with no people
 foreign key. Never fabricate a person for a world/arm actor. Initial/exogenous
@@ -269,7 +273,8 @@ a subset of wire nonempty strings. Study-generated wire entity/proposal/decision
 candidate/receipt IDs use that subset. Arbitrary adapter IDs remain losslessly
 observable, but cannot enter scenario storage through truncation or rewriting.
 Record-ref digests bind the complete observable versioned record after explicit
-projection, using canonical JSON per CONTRACTS. Renaming/projecting fields changes
+projection (dependency depends_on_task_id renamed to dependency_task_id), using
+canonical JSON per CONTRACTS. Renaming/projecting fields changes
 that digest; never silently reuse a preprojection digest. File SHA256 fields instead
 hash exact delivered bytes, without canonicalization or newline normalization.
 
@@ -277,15 +282,18 @@ All intervals are half-open [start_tick,end_tick), with start<end. Equality to e
 is outside availability/delegation/evidence/validity/approval intervals. End96 does
 not include the close96 instant; the close-state check is still mandatory. Private
 within uses the same convention; H must not assume an end96 predicate includes96.
-New proposals stop before72; observations continue through96. Task.work_window is
-a required nullable interval, nonnull work windows must end by72; CONTRACTS defines
+An exclusive endpoint97 can contain close96;
+97 is a boundary sentinel, never a scheduled clock tick. All interval starts are
+0..96 and exclusive endpoints are1..97. New proposals stop before72;
+observations continue through96. Task.work_window is
+a required nullable interval, nonnull work windows must end by96; CONTRACTS defines
 the supported colleague transitions and ordering. These are future validation
 obligations, not executed world logic.
 
-Finite request topics and equivalent-action classes are pinned in CONTRACTS and
+Finite request topics and equivalent-action classes are defined in CONTRACTS and
 wire/scenario common definitions. safe_request_topic uses the finite enum or null.
 Private information_topic_or_target names that topic for request_info and otherwise
-the canonical semantic-target digest. Independent grouping still derives identity
+the canonical per-action semantic-target digest. Independent grouping still derives identity
 from actual effects and observed epochs, never imports controller intent code or
 trusts its key. Vocabulary alignment does not make private grouping data public.
 Relational constraints remain documentary obligations, not schema execution claims.

@@ -331,13 +331,13 @@
                 }
               },
               "topic": {
-                "enum": [
-                  "decision_record",
-                  "dependency_state",
-                  "delegation_scope",
-                  "availability_window",
-                  "work_window",
-                  null
+                "anyOf": [
+                  {
+                    "$ref": "urn:workboard:v1:wire:common#/$defs/information-topic"
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               }
             },

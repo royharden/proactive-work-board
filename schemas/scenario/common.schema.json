@@ -29,8 +29,8 @@
         },
         "end_tick": {
           "type": "integer",
-          "minimum": 0,
-          "maximum": 96
+          "minimum": 1,
+          "maximum": 97
         }
       },
       "required": [
@@ -184,7 +184,7 @@
                 },
                 "end_tick": {
                   "type": "integer",
-                  "minimum": 0,
+                  "minimum": 1,
                   "maximum": 96
                 }
               },
@@ -522,8 +522,8 @@
             },
             "end_tick": {
               "type": "integer",
-              "minimum": 0,
-              "maximum": 96
+              "minimum": 1,
+              "maximum": 97
             }
           },
           "required": [
@@ -578,8 +578,8 @@
             },
             "end_tick": {
               "type": "integer",
-              "minimum": 0,
-              "maximum": 96
+              "minimum": 1,
+              "maximum": 97
             }
           },
           "required": [
@@ -659,8 +659,8 @@
             },
             "end_tick": {
               "type": "integer",
-              "minimum": 0,
-              "maximum": 96
+              "minimum": 1,
+              "maximum": 97
             }
           },
           "required": [
@@ -700,22 +700,10 @@
       ]
     },
     "information_topic": {
-      "enum": [
-        "decision_record",
-        "dependency_state",
-        "delegation_scope",
-        "availability_window",
-        "work_window"
-      ]
+      "$ref": "urn:workboard:v1:wire:common#/$defs/information-topic"
     },
     "equivalent_action_class": {
-      "enum": [
-        "clear_dependency",
-        "set_ready",
-        "reassign_to_delegate",
-        "request_info",
-        "evidence_comment"
-      ]
+      "$ref": "urn:workboard:v1:wire:common#/$defs/equivalent-action-class"
     },
     "exogenous_comment": {
       "allOf": [

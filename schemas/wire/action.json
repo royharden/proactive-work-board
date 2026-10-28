@@ -89,13 +89,7 @@
           "minLength": 1
         },
         "topic": {
-          "enum": [
-            "decision_record",
-            "dependency_state",
-            "delegation_scope",
-            "availability_window",
-            "work_window"
-          ]
+          "$ref": "urn:workboard:v1:wire:common#/$defs/information-topic"
         },
         "body": {
           "type": "string",
