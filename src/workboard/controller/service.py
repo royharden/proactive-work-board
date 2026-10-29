@@ -45,7 +45,10 @@ def _interval(value: Any, *, work: bool = False) -> tuple[int, int]:
     return start, end
 
 
-def propose(store: Any, board_id: str, task_id: str, actor: dict[str, Any]) -> dict[str, Any]:
+def propose(
+    store: Any, board_id: str, task_id: str, actor: dict[str, Any],
+    *, with_evidence_comment: bool = False,
+) -> dict[str, Any]:
     """Propose metadata only; abstain on missing/unsafe/capped observations.
 
     One domain snapshot follows a mandatory host metadata reservation, whose
@@ -54,6 +57,8 @@ def propose(store: Any, board_id: str, task_id: str, actor: dict[str, Any]) -> d
     proposal/decision/transaction semantics independently of this local preview.
     """
     require_actor(actor, board_id, "read", "propose")
+    if type(with_evidence_comment) is not bool:
+        raise ValueError("explicit_comment_mode_required")
     if not isinstance(board_id, str) or not board_id or not isinstance(task_id, str) or not task_id:
         return {"status": "abstained", "reason": "missing_target"}
     try:
@@ -142,7 +147,9 @@ def propose(store: Any, board_id: str, task_id: str, actor: dict[str, Any]) -> d
             "evidence_scope_revision": snapshot["evidence_scope_revision"],
             "effective_from_tick": tick, "effective_until_tick": until,
         }
-        actions, writes = compile_dependency(task_id, links)
+        actions, writes = compile_dependency(
+            task_id, links, with_evidence_comment=with_evidence_comment, evidence_refs=refs,
+        )
         intent = semantic_intent(board_id, task_id, actions, epoch)
         candidate_id = "candidate_" + digest_json([board_id, task_id, actions, read_binding, refs])[:32]
         proposal = {
@@ -165,7 +172,8 @@ def propose(store: Any, board_id: str, task_id: str, actor: dict[str, Any]) -> d
         "preview": {
             "board_id": board_id, "task_id": task_id, "at_tick": tick,
             "mode": "read_only", "changes": deepcopy(writes),
-            "domain_writes": len(writes), "comment_writes": 0,
+            "domain_writes": sum(write["kind"] != "comments" for write in writes),
+            "comment_writes": sum(write["kind"] == "comments" for write in writes),
             "episode_read_calls": reservation["reads_used"],
             "episode_reads_remaining": reservation["reads_remaining"],
         },

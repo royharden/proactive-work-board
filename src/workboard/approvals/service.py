@@ -7,7 +7,7 @@ from workboard.controller.evidence import (
     PolicyRefusal, check_binding, integer, read_snapshot, require_actor,
 )
 from workboard.controller.intent import semantic_intent
-from workboard.controller.compile import compile_dependency
+from workboard.controller.compile import EVIDENCE_BODY, REWORD_SUFFIX, compile_dependency
 from workboard.schemas.canonical import digest_json, proposal_digest
 from workboard.schemas.validation import validate_decision, validate_proposal
 
@@ -42,7 +42,31 @@ def _check_proposal(proposal: dict[str, Any]) -> None:
                 "id": action["dependency_link_id"], "task_id": action["task_id"],
                 "dependency_task_id": action["dependency_task_id"],
             })
-    actions, writes = compile_dependency(proposal["task_id"], links)
+    comments = [action for action in proposal["action_bundle"]
+                if action["action_kind"] == "evidence_comment"]
+    comment_writes = [write for write in proposal["compiled_write_set"]
+                      if write["kind"] == "comments"]
+    if len(comments) > 1 or len(comment_writes) != len(comments):
+        raise ValueError("auxiliary_comment_count")
+    alternate = False
+    comment_id = None
+    if comments:
+        body = comments[0]["body"]
+        if body not in {EVIDENCE_BODY, EVIDENCE_BODY + REWORD_SUFFIX}:
+            raise ValueError("unsupported_auxiliary_comment_body")
+        alternate = body == EVIDENCE_BODY + REWORD_SUFFIX
+        comment_id = comment_writes[0]["id"]
+        bound = {(row["kind"], row["id"]): row["version"]
+                 for row in proposal["read_binding"]["rows"]}
+        for ref in comments[0]["cites"]:
+            if (ref not in proposal["evidence_refs"]
+                    or bound.get((ref["kind"], ref["id"])) != ref["version"]):
+                raise ValueError("unbound_auxiliary_citation")
+    actions, writes = compile_dependency(
+        proposal["task_id"], links, with_evidence_comment=bool(comments),
+        evidence_refs=proposal["evidence_refs"],
+        alternate_wording=alternate, comment_id=comment_id,
+    )
     if actions != proposal["action_bundle"] or writes != proposal["compiled_write_set"]:
         raise ValueError("dependency_compile_mismatch")
     binding = proposal["read_binding"]
