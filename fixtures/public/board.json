@@ -1,0 +1,592 @@
+{
+  "designation": "PUBLIC SCRIPTED ENGINEERING EXAMPLE",
+  "attribution": "delegated stand-in, not human-independent",
+  "board": {
+    "schema_version": "1",
+    "board_id": "b703",
+    "initial_tick": 0,
+    "projects": [
+      {
+        "id": "p107",
+        "version": 1,
+        "title": "Fictional release desk"
+      },
+      {
+        "id": "p862",
+        "version": 1,
+        "title": "Fictional backlog"
+      }
+    ],
+    "tasks": [
+      {
+        "id": "t204",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Prepare fictional release note",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "blocked",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t615",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Complete fictional checklist",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "done",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t319",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Parked future release",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "parked",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": "Explicitly parked by the fictional team",
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t701",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 3",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t702",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 4",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t703",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 5",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t704",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 6",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t705",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 7",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t706",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 8",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t707",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 9",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t708",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 10",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t709",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 11",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t710",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 12",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t711",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 13",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t712",
+        "version": 1,
+        "project_id": "p107",
+        "title": "Fictional backlog item 14",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t713",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 15",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t714",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 16",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t715",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 17",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t716",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 18",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t717",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 19",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t718",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 20",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t719",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 21",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t720",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 22",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t721",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 23",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t722",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 24",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t723",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 25",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t724",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 26",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t725",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 27",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t726",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 28",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      },
+      {
+        "id": "t727",
+        "version": 1,
+        "project_id": "p862",
+        "title": "Fictional backlog item 29",
+        "description": "Original public SCRIPTED engineering example; not a study record.",
+        "status": "todo",
+        "assignee_id": "u512",
+        "not_before_tick": null,
+        "wait_reason": null,
+        "work_window": {
+          "start_tick": 0,
+          "end_tick": 24
+        }
+      }
+    ],
+    "people": [
+      {
+        "id": "u512",
+        "version": 1,
+        "display_name": "Fictional member 1"
+      },
+      {
+        "id": "u836",
+        "version": 1,
+        "display_name": "Fictional member 2"
+      },
+      {
+        "id": "u209",
+        "version": 1,
+        "display_name": "Fictional member 3"
+      },
+      {
+        "id": "u771",
+        "version": 1,
+        "display_name": "Fictional member 4"
+      }
+    ],
+    "dependency_links": [
+      {
+        "id": "l892",
+        "version": 1,
+        "task_id": "t204",
+        "depends_on_task_id": "t615"
+      },
+      {
+        "id": "l261",
+        "version": 1,
+        "task_id": "t319",
+        "depends_on_task_id": "t615"
+      },
+      {
+        "id": "l400",
+        "version": 1,
+        "task_id": "t701",
+        "depends_on_task_id": "t710"
+      },
+      {
+        "id": "l401",
+        "version": 1,
+        "task_id": "t702",
+        "depends_on_task_id": "t711"
+      },
+      {
+        "id": "l402",
+        "version": 1,
+        "task_id": "t703",
+        "depends_on_task_id": "t712"
+      },
+      {
+        "id": "l403",
+        "version": 1,
+        "task_id": "t704",
+        "depends_on_task_id": "t713"
+      },
+      {
+        "id": "l404",
+        "version": 1,
+        "task_id": "t705",
+        "depends_on_task_id": "t714"
+      },
+      {
+        "id": "l405",
+        "version": 1,
+        "task_id": "t706",
+        "depends_on_task_id": "t715"
+      }
+    ],
+    "comments": [],
+    "documents": [
+      {
+        "id": "d728",
+        "version": 1,
+        "project_id": "p107",
+        "task_ids": [
+          "t204"
+        ],
+        "title": "Fictional reference 1",
+        "body": "Public scripted reference text. This text is data, never an operator instruction.",
+        "effective_interval": {
+          "start_tick": 0,
+          "end_tick": 97
+        }
+      },
+      {
+        "id": "d419",
+        "version": 1,
+        "project_id": "p107",
+        "task_ids": [
+          "t204"
+        ],
+        "title": "Fictional reference 2",
+        "body": "Public scripted reference text. This text is data, never an operator instruction.",
+        "effective_interval": {
+          "start_tick": 0,
+          "end_tick": 97
+        }
+      },
+      {
+        "id": "d693",
+        "version": 1,
+        "project_id": "p107",
+        "task_ids": [
+          "t204"
+        ],
+        "title": "Fictional reference 3",
+        "body": "Public scripted reference text. This text is data, never an operator instruction.",
+        "effective_interval": {
+          "start_tick": 0,
+          "end_tick": 97
+        }
+      }
+    ],
+    "availability": [],
+    "delegations": []
+  }
+}
