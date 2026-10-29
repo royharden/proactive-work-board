@@ -1,7 +1,7 @@
 # Scripted demo source guide
 
 **Construction source only; all invocation examples and acceptance are NOT RUN.**
-Explicit owner execution authority and final producer integration are required
+Explicit owner execution authority and final combined-source review are required
 before trying them. Nothing here is an empirical study or an efficacy result.
 
 The [README](../README.md) contains PowerShell source-PYTHONPATH examples for an
@@ -79,19 +79,19 @@ The accepted D1 producer is present in this checkout, providing durable
 `reserve_read(board_id,task_id,actor)` and
 `inspect_decision(board_id,decision_id,actor)` plus complete ordered,
 nonrecursive observed history. These are constructed source, not executed proof.
-D2 still owns replacing its initial per-object read ledger
-and locally inferred epochs with the durable host reservation before selection
-and approval reads. Observer-only driver/verifier snapshots are outside that
-selection budget. Reopening a Store must not reset the selection cap; using one
-Store here is convenience, not proof of that property.
+The integrated D2 consumer reserves through the durable host API before
+selection and approval reads and uses its returned host epoch. It has no
+per-Store fallback ledger. Observer-only driver/verifier snapshots are outside
+that selection budget. Reopening a Store must not reset the selection cap;
+using one Store here is convenience, not runtime proof of that property.
 
 D3 consumes these APIs without reimplementing either producer. Missing decision inspection fails closed;
 no direct journal SQL, fallback cache or unconditional success is provided.
 `before.verification_context` binds the actual proposal/decision on a copied
 snapshot. D3 never sets `history_complete` or fills a canned history. Missing,
 uncertain or discontinuous observation history must remain pending and cannot
-pass the happy acceptance assertions. Final D2 consumer integration requires a later
-combined-source inspection, then explicit execution authorization and actual
+pass the happy acceptance assertions. Final combined-source review is pending,
+followed by explicit execution authorization and actual
 SQLite/approval/rollback/history/report checks.
 
 Original scientific G1/G2/G3 remain UNFULFILLED/out of demo scope. Public fixtures

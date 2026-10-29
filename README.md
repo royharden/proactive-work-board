@@ -13,7 +13,7 @@ No keys, accounts, provider network calls or paid model services are needed.
 Source construction spent USD 0; no efficacy, model or independent-audit claim is made.
 
 Read [DEMO-QUICKSTART](docs/DEMO-QUICKSTART.md) for source navigation, future
-invocation examples, expected engineering checks and deferred producer integration.
+invocation examples, expected engineering checks and deferred runtime validation.
 [DEMO-LIMITATIONS](docs/DEMO-LIMITATIONS.md) explains mechanical verification,
 complete-history requirements and the limits of builder-authored observations.
 
@@ -49,15 +49,13 @@ missing APIs or incomplete verification; no successful result artifact is shippe
 
 ## Current construction limits
 
-D1's durable `reserve_read`/`inspect_decision` and derived complete ordered
-history are present in this source checkout. D3 directly observes the persisted
-decision through that API, without fallback caches or SQL. D2's matching durable
-reservation consumer repair remains a separate integration package: the current
-policy still counts reads per Store object. A final source comparison must confirm
-that it charges the durable host reservation before policy/approval reads across
-reopen. Missing/malformed decision observations fail closed; incomplete verification
-history cannot be called verified. Final combined-source tracing and every runtime
-check remain deferred.
+The integrated source includes D1's durable `reserve_read`/`inspect_decision`
+and derived complete ordered history, D2's mandatory reservation before
+policy/approval reads, and D3's direct persisted-decision observations. The
+consumer uses the returned host epoch and has no per-Store fallback ledger.
+Missing/malformed decision observations fail closed; incomplete verification
+history cannot be called verified. Final combined-source review is pending.
+All runtime checks, including behavior across reopen, remain NOT RUN.
 
 ## Original scientific protocol
 
