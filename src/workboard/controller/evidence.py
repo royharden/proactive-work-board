@@ -1,16 +1,17 @@
 """Bounded, board-scoped observation helpers for the private keyless demo.
 
-The ledger is scoped to a BoardStore object, not a durable DB budget. Reopening a
-store needs a host-owned read/epoch journal before claiming a run-wide cap. The
-single-session demo must keep one store object. No application I/O on import.
+Every controller/approval domain read requires the host's durable reservation.
+No local cache, inferred epoch, reset or fallback peek exists. Observer-only
+driver/verifier snapshots are outside this bounded policy selection stream.
+No application I/O on import.
 """
 
 from copy import deepcopy
-from dataclasses import dataclass, field
 from typing import Any
-from weakref import WeakKeyDictionary
 
+from workboard.host import store as host_module
 from workboard.schemas.canonical import digest_json
+from workboard.schemas.records import validate_graph
 
 KINDS = (
     "projects", "tasks", "dependency_links", "comments", "documents", "people",
@@ -43,52 +44,56 @@ def require_actor(actor: dict[str, Any], board_id: str, *caps: str) -> None:
         raise PermissionError("board_capability_denied")
 
 
-@dataclass
-class Episode:
-    reads: int = 0
-    epoch: int = 0
-    fingerprint: str | None = None
+def reserve_read(
+    store: Any, board_id: str, task_id: str, actor: dict[str, Any],
+) -> dict[str, int]:
+    """Obtain durable metadata permission BEFORE the next policy domain read.
 
-
-@dataclass
-class Ledger:
-    episodes: dict[tuple[str, str], Episode] = field(default_factory=dict)
-
-
-_LEDGERS: WeakKeyDictionary[Any, Ledger] = WeakKeyDictionary()
-
-
-def episode_for(store: Any, board_id: str, task_id: str) -> Episode:
+    The producer owns actor-independent counters across reopen and canonical
+    observed transitions. Missing/old hosts refuse without a domain read. The
+    reservation itself returns metadata only, not a second policy observation.
+    """
+    require_actor(actor, board_id, "read")
+    method = getattr(store, "reserve_read", None)
+    budget_error = getattr(host_module, "ReadBudgetExceeded", None)
+    if (not callable(method) or not isinstance(budget_error, type)
+            or not issubclass(budget_error, RuntimeError)):
+        raise PolicyRefusal("unsupported_host_read_reservation")
     try:
-        if store not in _LEDGERS:
-            _LEDGERS[store] = Ledger()
-        ledger = _LEDGERS[store]
-    except TypeError as exc:
-        raise PolicyRefusal("store_session_ledger_unavailable") from exc
-    key = (board_id, task_id)
-    if key not in ledger.episodes:
-        if len(ledger.episodes) >= MAX_OBSERVABLE_RECORDS:
-            raise PolicyRefusal("session_ledger_cap")
-        ledger.episodes[key] = Episode()
-    return ledger.episodes[key]
+        result = method(board_id, task_id, actor)
+    except budget_error:
+        raise PolicyRefusal("read_budget_exhausted") from None
+    if not isinstance(result, dict) or set(result) != {
+        "episode_epoch", "reads_used", "reads_remaining",
+    }:
+        raise PolicyRefusal("malformed_host_read_reservation")
+    epoch = integer(result["episode_epoch"], maximum=2**63 - 1)
+    used = integer(result["reads_used"], minimum=1, maximum=MAX_READS)
+    remaining = integer(result["reads_remaining"], maximum=MAX_READS - 1)
+    if used + remaining != MAX_READS:
+        raise PolicyRefusal("malformed_host_read_reservation")
+    return {"episode_epoch": epoch, "reads_used": used, "reads_remaining": remaining}
 
 
 def read_snapshot(
     store: Any, board_id: str, task_id: str, actor: dict[str, Any],
-) -> tuple[dict[str, Any], Episode]:
+    *, expected_epoch: int | None = None,
+) -> tuple[dict[str, Any], dict[str, int]]:
     require_actor(actor, board_id, "read")
-    episode = episode_for(store, board_id, task_id)
-    # Reserve before even a failed read. At exhaustion do not peek for a reset.
-    if episode.reads >= MAX_READS:
-        raise PolicyRefusal("read_budget_exhausted")
-    episode.reads += 1
+    reservation = reserve_read(store, board_id, task_id, actor)
+    if expected_epoch is not None and reservation["episode_epoch"] != expected_epoch:
+        # Charge failed preflight conservatively; do not peek into domain rows.
+        raise PolicyRefusal("stale_host_epoch")
     snapshot = deepcopy(store.snapshot(board_id, actor))
     if not isinstance(snapshot, dict) or snapshot.get("board_id") != board_id:
         raise PolicyRefusal("cross_board_snapshot")
     integer(snapshot.get("tick"))
     integer(snapshot.get("evidence_scope_revision"), maximum=2**63 - 1)
     index_records(snapshot)
-    return snapshot, episode
+    # Accepted closed records/FKs: absent fields are never silently treated null,
+    # and document/task project consistency is checked before producing evidence.
+    validate_graph(snapshot["records"])
+    return snapshot, reservation
 
 
 def index_records(snapshot: dict[str, Any]) -> dict[str, dict[str, dict[str, Any]]]:
@@ -118,13 +123,10 @@ def index_records(snapshot: dict[str, Any]) -> dict[str, dict[str, dict[str, Any
 
 
 def projected(kind: str, record: dict[str, Any]) -> dict[str, Any]:
-    """Hash the complete observable payload with the declared dependency alias."""
+    """Accepted host records are already projected; never relabel their digest."""
     result = deepcopy(record)
     if kind == "dependency_links" and "depends_on_task_id" in result:
-        target = result.pop("depends_on_task_id")
-        if "dependency_task_id" in result:
-            raise PolicyRefusal("contradictory_dependency_alias")
-        result["dependency_task_id"] = target
+        raise PolicyRefusal("unprojected_dependency_record")
     return result
 
 

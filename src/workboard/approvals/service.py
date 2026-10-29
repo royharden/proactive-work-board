@@ -9,6 +9,7 @@ from workboard.controller.evidence import (
 from workboard.controller.intent import semantic_intent
 from workboard.controller.compile import compile_dependency
 from workboard.schemas.canonical import digest_json, proposal_digest
+from workboard.schemas.validation import validate_decision, validate_proposal
 
 _PROPOSAL_FIELDS = frozenset({
     "proposal_id", "board_id", "task_id", "candidate_id", "action_bundle", "intent",
@@ -22,6 +23,8 @@ _DECISION_FIELDS = frozenset({
 
 
 def _check_proposal(proposal: dict[str, Any]) -> None:
+    # Reuse accepted D1 closed wire validation; local guard narrows to B2.
+    validate_proposal(proposal)
     if not isinstance(proposal, dict) or set(proposal) != _PROPOSAL_FIELDS:
         raise ValueError("proposal_fields_mismatch")
     if proposal.get("digest") != proposal_digest(proposal):
@@ -65,7 +68,10 @@ def decide(
     if choice not in {"approved", "rejected"}:
         raise ValueError("operator_choice_required")
     integer(tick)
-    snapshot, _ = read_snapshot(store, proposal["board_id"], proposal["task_id"], operator)
+    snapshot, _ = read_snapshot(
+        store, proposal["board_id"], proposal["task_id"], operator,
+        expected_epoch=proposal["intent"]["episode_epoch"],
+    )
     if snapshot["tick"] != tick:
         raise PolicyRefusal("operator_tick_mismatch")
     check_binding(proposal, snapshot)
@@ -91,6 +97,7 @@ def approved_bundle(proposal: dict[str, Any], decision: dict[str, Any]) -> dict[
     """
     proposal, decision = deepcopy(proposal), deepcopy(decision)
     _check_proposal(proposal)
+    validate_decision(decision)
     if not isinstance(decision, dict) or set(decision) != _DECISION_FIELDS:
         raise ValueError("decision_fields_mismatch")
     if (decision["status"] != "approved"
