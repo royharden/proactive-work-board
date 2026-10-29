@@ -27,6 +27,7 @@ DDL = (
     "CREATE TABLE IF NOT EXISTS intents (board TEXT NOT NULL, key TEXT NOT NULL, payload TEXT NOT NULL, receipt TEXT NOT NULL, PRIMARY KEY(board,key), FOREIGN KEY(board) REFERENCES boards(id))",
     "CREATE TABLE IF NOT EXISTS outbox (seq INTEGER PRIMARY KEY AUTOINCREMENT, board TEXT NOT NULL, payload TEXT NOT NULL, FOREIGN KEY(board) REFERENCES boards(id))",
     "CREATE TABLE IF NOT EXISTS history (seq INTEGER PRIMARY KEY AUTOINCREMENT, board TEXT NOT NULL, payload TEXT NOT NULL, FOREIGN KEY(board) REFERENCES boards(id))",
+    "CREATE TABLE IF NOT EXISTS policy_reads (board TEXT NOT NULL, task TEXT NOT NULL, episode INTEGER NOT NULL, used INTEGER NOT NULL CHECK(used BETWEEN 1 AND 8), PRIMARY KEY(board,task,episode), FOREIGN KEY(board,task) REFERENCES epochs(board,task))",
     "CREATE TABLE IF NOT EXISTS initial_boundaries (board TEXT PRIMARY KEY, payload TEXT NOT NULL, FOREIGN KEY(board) REFERENCES boards(id))",
     "CREATE TABLE IF NOT EXISTS epochs (board TEXT NOT NULL, task TEXT NOT NULL, epoch INTEGER NOT NULL, PRIMARY KEY(board,task), FOREIGN KEY(board) REFERENCES boards(id))",
 )
@@ -45,6 +46,10 @@ def _authorize(actor, board_id, capability):
     if any(cap not in ("read", "propose", "decide", "apply", "advance", "seed", "scripted_edit")
            for cap in actor["capabilities"]):
         raise PermissionError("unknown_capability")
+
+
+class ReadBudgetExceeded(RuntimeError):
+    """The durable eight-read controller/approval episode budget is exhausted."""
 
 
 class BoardStore:
@@ -296,6 +301,45 @@ class BoardStore:
                     if related and query.casefold() in record["body"].casefold():
                         matches.append({"kind": kind, "record": record})
             return {"records": matches[:limit], "truncated": len(matches) > limit}
+
+    def reserve_read(self, board_id, task_id, actor):
+        """Durably charge the next controller/approval read BEFORE dispatch.
+
+        This returns metadata only, never a domain snapshot. A committed charge
+        remains spent after a failed/empty query, client crash or store reopening.
+        Labels and store objects cannot reset the board/task/host-epoch key.
+        Callers must reserve before every policy/approval domain read; observer
+        snapshots used by the driver/verifier are not automatically charged.
+        No fallback budget or inferred epoch is accepted.
+        """
+        _authorize(actor, board_id, "read")
+        _authorize(actor, board_id, "propose" if "propose" in actor["capabilities"] else "decide")
+        identifier(task_id)
+        with self._connection(write=True) as c:
+            self._board(c, board_id)  # Board metadata only.
+            observed = c.execute("SELECT epoch FROM epochs WHERE board=? AND task=?",
+                                 (board_id, task_id)).fetchone()
+            if observed is None:
+                raise ValueError("unknown_task_episode")
+            epoch = observed["epoch"]
+            integer(epoch)
+            # Missing metadata tables fail closed; never recreate a lost journal
+            # on this read path or substitute an in-memory zero.
+            if not c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='policy_reads'").fetchone():
+                raise RuntimeError("durable_read_journal_unavailable")
+            row = c.execute("SELECT used FROM policy_reads WHERE board=? AND task=? AND episode=?",
+                            (board_id, task_id, epoch)).fetchone()
+            used = 0 if row is None else row["used"]
+            integer(used, 0, 8)
+            if used >= 8:
+                raise ReadBudgetExceeded("eight_read_episode_limit")
+            charged = used + 1
+            c.execute("INSERT INTO policy_reads(board,task,episode,used) VALUES (?,?,?,?) "
+                      "ON CONFLICT(board,task,episode) DO UPDATE SET used=excluded.used",
+                      (board_id, task_id, epoch, charged))
+            result = {"episode_epoch": epoch, "reads_used": charged, "reads_remaining": 8 - charged}
+        # Returning only after successful COMMIT prevents dispatch on failed charge.
+        return result
 
     def episode_epoch(self, board_id, task_id, actor):
         """Optional observation helper for consumers regenerating a real episode."""
