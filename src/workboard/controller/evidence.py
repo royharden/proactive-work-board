@@ -1,8 +1,9 @@
 """Bounded, board-scoped observation helpers for the private keyless demo.
 
-The ledger is scoped to a BoardStore object, not a durable DB budget. Reopening a
-store needs a host-owned read/epoch journal before claiming a run-wide cap. The
-single-session demo must keep one store object. No application I/O on import.
+The read ledger is scoped to a BoardStore object, not a durable DB budget.
+Epoch identity comes from the accepted host's durable epoch helper. Reopening a
+store still resets read accounting; keep one store object for a demo session.
+No application I/O on import.
 """
 
 from copy import deepcopy
@@ -47,7 +48,7 @@ def require_actor(actor: dict[str, Any], board_id: str, *caps: str) -> None:
 class Episode:
     reads: int = 0
     epoch: int = 0
-    fingerprint: str | None = None
+    observed_host_epoch: int | None = None
 
 
 @dataclass
@@ -89,6 +90,27 @@ def read_snapshot(
     integer(snapshot.get("evidence_scope_revision"), maximum=2**63 - 1)
     index_records(snapshot)
     return snapshot, episode
+
+
+def read_epoch(
+    store: Any, board_id: str, task_id: str, actor: dict[str, Any],
+) -> int:
+    """Count the accepted host helper as a read; never invent/reset an epoch."""
+    require_actor(actor, board_id, "read")
+    episode = episode_for(store, board_id, task_id)
+    if episode.reads >= MAX_READS:
+        raise PolicyRefusal("read_budget_exhausted")
+    episode.reads += 1
+    epoch = integer(store.episode_epoch(board_id, task_id, actor), maximum=2**63 - 1)
+    if episode.observed_host_epoch is not None and epoch < episode.observed_host_epoch:
+        raise PolicyRefusal("host_epoch_regressed")
+    if episode.observed_host_epoch is not None and epoch != episode.observed_host_epoch:
+        # Snapshot plus this epoch observation establish the new host episode.
+        # Both port reads are counted; exhausted prior budgets never peek here.
+        episode.reads = 2
+    episode.epoch = epoch
+    episode.observed_host_epoch = epoch
+    return epoch
 
 
 def index_records(snapshot: dict[str, Any]) -> dict[str, dict[str, dict[str, Any]]]:
