@@ -36,6 +36,34 @@ def check_trace(trace: dict) -> None:
     require(obs["preview_snapshot"]["records"] == before["records"], "preview wrote domain rows")
     require(_row(after, "tasks", PARKED_ID) == _row(before, "tasks", PARKED_ID),
             "parked near-miss changed")
+    if variant == "not-before-boundary":
+        boundary = obs["boundary_case"]
+        results = boundary["selection_results"]
+        require(len(results) == 8 and all(
+            result == {"status": "abstained", "reason": "not_before_wait"} for result in results),
+            "eight actual pre-boundary selections did not truthfully abstain")
+        require(boundary["unrelated_result"] == {
+            "status": "abstained", "reason": "read_budget_exhausted"},
+            "unrelated tick reset the exhausted selection budget")
+        old_epoch, new_epoch = boundary["initial_epoch"], boundary["crossed_epoch"]
+        require(type(old_epoch) is int and old_epoch >= 0 and type(new_epoch) is int
+                and boundary["unrelated_epoch"] == old_epoch and new_epoch > old_epoch,
+                "actual host epoch failed relevant-boundary vs unrelated-tick distinction")
+        require(before["tick"] == 0 and _row(before, "tasks", TASK_ID)["not_before_tick"] == 4
+                and boundary["unrelated_snapshot"]["tick"] == 1
+                and boundary["crossed_snapshot"]["tick"] == 4
+                and boundary["unrelated_snapshot"]["records"] == before["records"]
+                and boundary["crossed_snapshot"]["records"] == before["records"],
+                "clock-only boundary observations changed domain rows or used wrong ticks")
+        candidate = boundary["candidate"]
+        require(candidate["status"] == "proposed" and candidate["proposal"] == proposal
+                and proposal["intent"]["episode_epoch"] == new_epoch
+                and candidate["preview"]["episode_read_calls"] == 1
+                and candidate["preview"]["episode_reads_remaining"] == 7,
+                "post-boundary proposal did not consume the new host episode's first reservation")
+        require(trace["decision"]["decided_tick"] == 4 and receipt["applied_tick"] == 4
+                and _row(after, "tasks", TASK_ID)["not_before_tick"] == 4,
+                "boundary decision/apply did not bind actual eligible tick/domain state")
     reader = scripted_actor("read")
     reopened = BoardStore(Path(trace["db_path"]))
     persisted = reopened.snapshot(BOARD_ID, reader)

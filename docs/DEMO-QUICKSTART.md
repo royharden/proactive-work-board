@@ -51,6 +51,7 @@ These are public engineering assertions in source, not reported test results.
 | `delayed-revert` | Actual scripted +4 status revert remains adverse at +8; the expected adverse flag is required instead of expecting a verified happy effect. |
 | `ack-loss` | Named post-commit exception is actually observed; lookup recovers the stored exact receipt, without reapplying. |
 | `precommit-abort` | Named precommit exception is actually observed; reopened domain/outbox/intent and decision consumption show rollback. Receipt stays null; none is fabricated. |
+| `not-before-boundary` | Public normalized task starts with not-before tick 4. Eight real pre-boundary selections abstain; a tick-1 attempt still refuses the exhausted budget. Crossing tick 4 must advance the actual host episode and permit its first new reservation, then exact decision/apply and persisted-state checks. Observer snapshots/epoch queries do not reset or charge selection counters. NOT_RUN; D1 owns the relevant-boundary repair. |
 
 Manual mode displays the exact proposal digest and requires
 `approve <exact digest>`; anything else is a rejection. The human label describes
