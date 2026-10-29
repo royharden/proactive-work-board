@@ -13,7 +13,7 @@ from workboard.schemas.canonical import digest_json, proposal_digest
 from .compile import compile_dependency
 from .evidence import (
     MAX_SCOPED_RECORDS, PolicyRefusal, evidence_ref, index_records, integer,
-    projected, read_snapshot, require_actor,
+    projected, read_epoch, read_snapshot, require_actor,
 )
 from .intent import semantic_intent
 
@@ -45,27 +45,12 @@ def _interval(value: Any, *, work: bool = False) -> tuple[int, int]:
     return start, end
 
 
-def _observe_epoch(episode: Any, task: dict[str, Any], edges: list[list[str]]) -> None:
-    # Only dependency-policy relevant observable transitions. Link-row IDs,
-    # versions, text wording and delivery IDs are deliberately absent.
-    fingerprint = digest_json({
-        "status": task.get("status"), "assignee_id": task.get("assignee_id"),
-        "not_before_tick": task.get("not_before_tick"),
-        "wait_reason": task.get("wait_reason"), "work_window": task.get("work_window"),
-        "dependencies": sorted(edges),
-    })
-    if episode.fingerprint is not None and episode.fingerprint != fingerprint:
-        episode.epoch += 1
-        # The observation which establishes the new episode counts as its first read.
-        episode.reads = 1
-    episode.fingerprint = fingerprint
-
-
 def propose(store: Any, board_id: str, task_id: str, actor: dict[str, Any]) -> dict[str, Any]:
     """Propose metadata only; abstain on missing/unsafe/capped observations.
 
-    One snapshot is the only port read; there is no optional tool-menu fetch.
-    A session ledger also counts later approval-preflight reads. D1 must enforce
+    One snapshot plus the durable host epoch are the only two port reads;
+    there is no optional tool-menu fetch. A session ledger also counts later
+    approval-preflight reads. D1 must enforce
     proposal/decision/transaction semantics independently of this local preview.
     """
     require_actor(actor, board_id, "read", "propose")
@@ -80,15 +65,13 @@ def propose(store: Any, board_id: str, task_id: str, actor: dict[str, Any]) -> d
             raise PolicyRefusal("missing_task")
         links = [projected("dependency_links", row)
                  for row in records["dependency_links"].values() if row.get("task_id") == task_id]
-        edges: list[list[str]] = []
         dependencies: list[dict[str, Any]] = []
         for link in links:
             dep = records["tasks"].get(link.get("dependency_task_id"))
             if dep is None or dep["id"] == task_id:
                 raise PolicyRefusal("missing_or_self_dependency")
-            edges.append([dep["id"], dep.get("status")])
             dependencies.append(dep)
-        _observe_epoch(episode, task, edges)
+        epoch = read_epoch(store, board_id, task_id, actor)
         tick = snapshot["tick"]
         if tick >= 72:
             raise PolicyRefusal("proposal_horizon_closed")
@@ -139,16 +122,28 @@ def propose(store: Any, board_id: str, task_id: str, actor: dict[str, Any]) -> d
                     raise PolicyRefusal("inactive_scoped_evidence")
                 until = min(until, end)
                 include("documents", row)
-        if len(scoped) > MAX_SCOPED_RECORDS or until <= tick:
+        # Accepted host closure is conservative beyond this dependency policy:
+        # all people/availability/delegations and ALL target-project documents.
+        # Bind their versions even when they are not active evidence/citations.
+        # Inactive intervals must not enter evidence_refs as current facts.
+        bound_rows = dict(scoped)
+        for kind in ("people", "availability", "delegations"):
+            for row in records[kind].values():
+                bound_rows[(kind, row["id"])] = row
+        for row in records["documents"].values():
+            if row["project_id"] == task["project_id"]:
+                bound_rows[("documents", row["id"])] = row
+        if max(len(scoped), len(bound_rows)) > MAX_SCOPED_RECORDS or until <= tick:
             raise PolicyRefusal("evidence_cap_or_expiry")
         refs = [evidence_ref(kind, row) for (kind, _), row in sorted(scoped.items())]
         read_binding = {
-            "rows": [{k: ref[k] for k in ("kind", "id", "version")} for ref in refs],
+            "rows": [{"kind": kind, "id": row["id"], "version": row["version"]}
+                     for (kind, _), row in sorted(bound_rows.items())],
             "evidence_scope_revision": snapshot["evidence_scope_revision"],
             "effective_from_tick": tick, "effective_until_tick": until,
         }
         actions, writes = compile_dependency(task_id, links)
-        intent = semantic_intent(board_id, task_id, actions, episode.epoch)
+        intent = semantic_intent(board_id, task_id, actions, epoch)
         candidate_id = "candidate_" + digest_json([board_id, task_id, actions, read_binding, refs])[:32]
         proposal = {
             "proposal_id": "proposal_" + digest_json([candidate_id, tick, intent["intent_key"]])[:32],
