@@ -26,7 +26,7 @@ def check_trace(trace: dict) -> None:
     # Imports happen only during this explicitly invoked acceptance procedure.
     from workboard.host.store import BoardStore
     from workboard.scenarios.public import BOARD_ID, TASK_ID, PARKED_ID, scripted_actor
-    from workboard.demo import HOSTILE_TEXT
+    from workboard.demo import HOSTILE_TEXT, _inspect_decision
 
     before, after, obs = trace["before"], trace["after"], trace["observations"]
     receipt, proposal = trace["receipt"], trace["proposal"]
@@ -36,24 +36,59 @@ def check_trace(trace: dict) -> None:
     require(obs["preview_snapshot"]["records"] == before["records"], "preview wrote domain rows")
     require(_row(after, "tasks", PARKED_ID) == _row(before, "tasks", PARKED_ID),
             "parked near-miss changed")
-    require(receipt["proposal_digest"] == proposal["digest"], "receipt exact digest mismatch")
+    if variant == "not-before-boundary":
+        boundary = obs["boundary_case"]
+        results = boundary["selection_results"]
+        require(len(results) == 8 and all(
+            result == {"status": "abstained", "reason": "not_before_wait"} for result in results),
+            "eight actual pre-boundary selections did not truthfully abstain")
+        require(boundary["unrelated_result"] == {
+            "status": "abstained", "reason": "read_budget_exhausted"},
+            "unrelated tick reset the exhausted selection budget")
+        old_epoch, new_epoch = boundary["initial_epoch"], boundary["crossed_epoch"]
+        require(type(old_epoch) is int and old_epoch >= 0 and type(new_epoch) is int
+                and boundary["unrelated_epoch"] == old_epoch and new_epoch > old_epoch,
+                "actual host epoch failed relevant-boundary vs unrelated-tick distinction")
+        require(before["tick"] == 0 and _row(before, "tasks", TASK_ID)["not_before_tick"] == 4
+                and boundary["unrelated_snapshot"]["tick"] == 1
+                and boundary["crossed_snapshot"]["tick"] == 4
+                and boundary["unrelated_snapshot"]["records"] == before["records"]
+                and boundary["crossed_snapshot"]["records"] == before["records"],
+                "clock-only boundary observations changed domain rows or used wrong ticks")
+        candidate = boundary["candidate"]
+        require(candidate["status"] == "proposed" and candidate["proposal"] == proposal
+                and proposal["intent"]["episode_epoch"] == new_epoch
+                and candidate["preview"]["episode_read_calls"] == 1
+                and candidate["preview"]["episode_reads_remaining"] == 7,
+                "post-boundary proposal did not consume the new host episode's first reservation")
+        require(trace["decision"]["decided_tick"] == 4 and receipt["applied_tick"] == 4
+                and _row(after, "tasks", TASK_ID)["not_before_tick"] == 4,
+                "boundary decision/apply did not bind actual eligible tick/domain state")
     reader = scripted_actor("read")
     reopened = BoardStore(Path(trace["db_path"]))
     persisted = reopened.snapshot(BOARD_ID, reader)
     require(persisted["records"] == (trace["delayed"] or after)["records"],
             "reopened domain rows differ from observed final snapshot")
-    # Read-only journal inspection is a named D1 reconciliation seam. A missing
-    # implementation fails this acceptance instead of silently skipping durable
-    # one-use/rollback checks or inferring them from a controller decision.
-    inspect_decision = getattr(reopened, "inspect_decision", None)
-    require(callable(inspect_decision), "D1 inspect_decision(board_id,decision_id,actor) required")
-    journal = inspect_decision(BOARD_ID, trace["decision"]["decision_id"], reader)
-    require(journal["decision"] == trace["decision"], "durable decision differs from exact approval")
+    journal = _inspect_decision(reopened, trace["decision"], reader)
+    require(obs["decision_before_apply"]["decision"] == trace["decision"]
+            and obs["decision_before_apply"]["consumed"] is False,
+            "decision was missing/consumed before its first apply attempt")
+    require(journal == obs["decision_after_apply"], "reopened decision differs from observed journal")
     events = reopened.read_events(BOARD_ID, 0, 100, reader)
     original = reopened.lookup_intent(BOARD_ID, proposal["intent"]["intent_key"], reader)
-    if variant in {"rejected", "expired", "stale", "inserted-evidence"}:
+    if variant == "precommit-abort":
+        require(obs.get("precommit_abort_observed") is True, "precommit fault did not occur")
+        require(receipt is None, "abort unexpectedly returned an apply receipt")
+        require(after["records"] == obs["pre_apply"]["records"], "abort changed domain rows")
+        require(events == obs["events_before_apply"], "abort persisted outbox changes")
+        require(original is None and journal["consumed"] is False,
+                "abort persisted intent or consumed the decision")
+        require(trace["effect_records"] == [], "receipt-free abort fabricated an effect record")
+        return
+    require(receipt["proposal_digest"] == proposal["digest"], "receipt exact digest mismatch")
+    if variant in {"rejected", "expired", "stale", "inserted-world-comment-evidence"}:
         expected_status = {"rejected": "rejected", "expired": "expired",
-                           "stale": "stale", "inserted-evidence": "stale"}[variant]
+                           "stale": "stale", "inserted-world-comment-evidence": "stale"}[variant]
         require(receipt["status"] == expected_status, "wrong refusal reason")
         require(receipt["committed"] is False, "refused proposal committed")
         require(receipt["actual_write_set"] == [] and receipt["outbox_event_ids"] == [],
@@ -61,7 +96,7 @@ def check_trace(trace: dict) -> None:
         require(after["records"] == obs["pre_apply"]["records"], "refused apply changed rows")
         require(events == obs["events_before_apply"], "refused apply appended durable outbox events")
         require(original is None, "refused apply persisted an intent receipt")
-        require(journal["consumed"] is False, "refused apply consumed the decision")
+        require(journal["consumed"] is False, "refused apply consumed decision")
         require(not any(e["flags"]["verified"] for e in trace["effect_records"]),
                 "refusal was marked verified")
         return
@@ -101,11 +136,53 @@ def check_trace(trace: dict) -> None:
         else:
             require(retry["status"] == "conflict" and not retry["committed"],
                     "changed payload under same intent was not refused")
-            alternate_journal = inspect_decision(
-                BOARD_ID, obs["alternate_decision"]["decision_id"], reader)
-            require(alternate_journal["decision"] == obs["alternate_decision"]
-                    and alternate_journal["consumed"] is False,
-                    "changed-payload refusal consumed or changed alternate decision")
+            require(retry["actual_write_set"] == [] and retry["outbox_event_ids"] == [],
+                    "reworded refusal reported second writes/events")
+            alternate = obs["alternate_proposal"]
+            # A summary/ID-only difference cannot satisfy the comment example.
+            from workboard.demo import _comment_pair
+            from workboard.controller.compile import REWORD_SUFFIX
+            from workboard.schemas.canonical import proposal_digest
+            primary_action, primary_write = _comment_pair(proposal)
+            alternate_action, alternate_write = _comment_pair(alternate)
+            primary_body, alternate_body = primary_action["body"], alternate_action["body"]
+            require(primary_body != alternate_body and alternate_body == primary_body + REWORD_SUFFIX,
+                    "missing actual distinct approved comment bodies")
+            require(proposal["digest"] != alternate["digest"]
+                    and proposal_digest(proposal) == proposal["digest"]
+                    and proposal_digest(alternate) == alternate["digest"],
+                    "comment proposals lack distinct complete canonical digests")
+            require(alternate["intent"] == proposal["intent"]
+                    and alternate["read_binding"] == proposal["read_binding"]
+                    and alternate["evidence_refs"] == proposal["evidence_refs"],
+                    "reworded comment changed semantic intent or evidence binding")
+            require({k: v for k, v in primary_action.items() if k != "body"}
+                    == {k: v for k, v in alternate_action.items() if k != "body"}
+                    and {k: v for k, v in primary_write.items() if k != "body"}
+                    == {k: v for k, v in alternate_write.items() if k != "body"},
+                    "alternate changed comment target/citations/topic/role")
+            require([w for w in proposal["compiled_write_set"] if w["kind"] != "comments"]
+                    == [w for w in alternate["compiled_write_set"] if w["kind"] != "comments"],
+                    "alternate changed domain permissions")
+            require(trace["decision"]["status"] == "approved"
+                    and obs["alternate_decision"]["status"] == "approved"
+                    and trace["decision"]["actor_kind"] == "scripted"
+                    and obs["alternate_decision"]["actor_kind"] == "scripted"
+                    and trace["decision"]["proposal_digest"] == proposal["digest"]
+                    and obs["alternate_decision"]["proposal_digest"] == alternate["digest"],
+                    "both exact comment bodies were not approved")
+            require(_row(after, "comments", primary_write["id"])["body"] == primary_body
+                    and _row(persisted, "comments", primary_write["id"])["body"] == primary_body,
+                    "primary approved body not actually persisted")
+            require(not any(row["body"] == alternate_body
+                            for row in persisted["records"]["comments"]),
+                    "alternate comment body persisted despite conflict")
+            require(obs["intent_before_retry"] == receipt
+                    and obs["intent_after_retry"] == receipt and original == receipt,
+                    "retry changed the original durable intent receipt")
+            alternate_journal = _inspect_decision(reopened, obs["alternate_decision"], reader)
+            require(alternate_journal["consumed"] is False,
+                    "changed-payload refusal consumed the alternate decision")
     if variant == "ack-loss":
         require(obs.get("acknowledgement_lost") is True, "ack-loss fault did not actually occur")
     if variant == "hostile":
