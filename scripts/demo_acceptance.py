@@ -42,18 +42,14 @@ def check_trace(trace: dict) -> None:
     persisted = reopened.snapshot(BOARD_ID, reader)
     require(persisted["records"] == (trace["delayed"] or after)["records"],
             "reopened domain rows differ from observed final snapshot")
-    # Read-only journal inspection is a named D1 reconciliation seam. A missing
-    # implementation fails this acceptance instead of silently skipping durable
-    # one-use/rollback checks or inferring them from a controller decision.
-    inspect_decision = getattr(reopened, "inspect_decision", None)
-    require(callable(inspect_decision), "D1 inspect_decision(board_id,decision_id,actor) required")
-    journal = inspect_decision(BOARD_ID, trace["decision"]["decision_id"], reader)
-    require(journal["decision"] == trace["decision"], "durable decision differs from exact approval")
+    # Accepted host exposes domain/outbox/intent observations, not decision
+    # consumption rows. Do not introduce an undeclared API or direct SQL.
+    # Aggregate acceptance explicitly reports this gap and cannot return PASS.
     events = reopened.read_events(BOARD_ID, 0, 100, reader)
     original = reopened.lookup_intent(BOARD_ID, proposal["intent"]["intent_key"], reader)
-    if variant in {"rejected", "expired", "stale", "inserted-evidence"}:
+    if variant in {"rejected", "expired", "stale", "inserted-world-comment-evidence"}:
         expected_status = {"rejected": "rejected", "expired": "expired",
-                           "stale": "stale", "inserted-evidence": "stale"}[variant]
+                           "stale": "stale", "inserted-world-comment-evidence": "stale"}[variant]
         require(receipt["status"] == expected_status, "wrong refusal reason")
         require(receipt["committed"] is False, "refused proposal committed")
         require(receipt["actual_write_set"] == [] and receipt["outbox_event_ids"] == [],
@@ -61,12 +57,10 @@ def check_trace(trace: dict) -> None:
         require(after["records"] == obs["pre_apply"]["records"], "refused apply changed rows")
         require(events == obs["events_before_apply"], "refused apply appended durable outbox events")
         require(original is None, "refused apply persisted an intent receipt")
-        require(journal["consumed"] is False, "refused apply consumed the decision")
         require(not any(e["flags"]["verified"] for e in trace["effect_records"]),
                 "refusal was marked verified")
         return
     require(receipt["committed"] is True and receipt["status"] == "applied", "apply failed")
-    require(journal["consumed"] is True, "committed decision not durably consumed")
     require(bool(receipt["actual_write_set"]) and bool(receipt["outbox_event_ids"]),
             "committed receipt lacks actual writes/outbox")
     require(_row(after, "tasks", TASK_ID)["status"] == "ready", "focal task not ready")
@@ -101,11 +95,6 @@ def check_trace(trace: dict) -> None:
         else:
             require(retry["status"] == "conflict" and not retry["committed"],
                     "changed payload under same intent was not refused")
-            alternate_journal = inspect_decision(
-                BOARD_ID, obs["alternate_decision"]["decision_id"], reader)
-            require(alternate_journal["decision"] == obs["alternate_decision"]
-                    and alternate_journal["consumed"] is False,
-                    "changed-payload refusal consumed or changed alternate decision")
     if variant == "ack-loss":
         require(obs.get("acknowledgement_lost") is True, "ack-loss fault did not actually occur")
     if variant == "hostile":
@@ -137,14 +126,17 @@ def main(argv=None) -> int:
             observations.append({"variant": variant, "status": "FAILED",
                                  "error_type": type(error).__name__, "detail": str(error)})
         else:
-            observations.append({"variant": variant, "status": "OBSERVED_CHECKS_PASSED"})
+            observations.append({"variant": variant, "status": "OBSERVED_ROW_CHECKS_PASSED"})
+    coverage_gaps = ["Direct persisted decision-consumption/rollback inspection is unavailable "
+                     "through the accepted host API; no new API or direct SQL introduced."]
     report = {"label": LABEL, "measurement": False, "variants": observations,
-              "status": "FAILED" if failed else "OBSERVED_CHECKS_PASSED",
+              "status": "FAILED" if failed else "INCOMPLETE",
+              "coverage_gaps": coverage_gaps,
               "scientific_gates": "UNFULFILLED / OUT OF DEMO SCOPE"}
     (root / "acceptance.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n",
                                          encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
-    return 1 if failed else 0
+    return 1 if failed or coverage_gaps else 0
 
 
 if __name__ == "__main__":

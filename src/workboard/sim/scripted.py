@@ -10,17 +10,15 @@ def advance(store, tick: int, actor: dict) -> None:
 
 
 def insert_contradiction(store, actor: dict) -> None:
-    """Insert visible evidence after approval; scope binding must reject apply.
+    """Insert sourced WORLD comment after approval to invalidate scope binding.
 
-    This is a scripted-edit extension seam, not a compiled action permission.
-    The host must support document inserts in its explicit fixture capability.
+    Host supplies exact exogenous source/provenance; this never broadens the
+    controller's compiled comment permissions or invents document support.
     """
     store.scripted_edit(BOARD_ID, [{
-        "op": "insert", "kind": "documents", "id": "d908",
-        "project_id": "p107", "task_ids": [TASK_ID],
-        "title": "Updated fictional work constraint",
+        "op": "insert", "kind": "comments", "id": "c908",
+        "task_id": TASK_ID, "actor_role": "world", "cites": [], "topic": None,
         "body": "A newly recorded business hold requires another review.",
-        "effective_interval": {"start_tick": 0, "end_tick": 97},
     }], actor)
 
 
