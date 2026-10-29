@@ -47,11 +47,6 @@ def preview_demo(variant: str = "happy") -> dict:
     if variant not in VARIANTS:
         raise ValueError("unknown demo variant")
     board = load_public()
-    if variant == "not-before-boundary":
-        targets = [row for row in board["records"]["tasks"] if row["id"] == TASK_ID]
-        if len(targets) != 1:
-            raise IntegrationUnavailable("public boundary case requires one supported target task")
-        targets[0]["not_before_tick"] = 4
     return {"label": LABEL, "mode": "SCRIPTED", "measurement": False,
             "runtime_status": "NOT_RUN", "variant": variant,
             "board_id": board["board_id"], "task_id": TASK_ID,
@@ -144,6 +139,11 @@ def run_demo(run_dir, variant="happy", operator_choice="approved", *,
     from workboard.report.render import render_report
 
     board = load_public()
+    if variant == "not-before-boundary":
+        targets = [row for row in board["records"]["tasks"] if row["id"] == TASK_ID]
+        if len(targets) != 1:
+            raise IntegrationUnavailable("public boundary case requires one supported target task")
+        targets[0]["not_before_tick"] = 4
     if variant == "hostile":
         board["records"]["documents"][0]["body"] = HOSTILE_TEXT
     reader = scripted_actor("read")
