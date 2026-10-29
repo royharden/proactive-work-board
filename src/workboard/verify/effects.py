@@ -320,8 +320,12 @@ def _epoch_targets(changes: list, a: dict, b: dict) -> tuple[set, bool]:
     left, right = _rows(a), _rows(b)
     for c in changes:
         kind, ident, field = c["kind"], c["id"], c["field"]
-        rows = [r for r in (left.get((kind, ident)), right.get((kind, ident))) if r is not None]
-        related = set().union(*(_related_tasks(kind, r, a) | _related_tasks(kind, r, b) for r in rows))
+        old_row, new_row = left.get((kind, ident)), right.get((kind, ident))
+        rows = [r for r in (old_row, new_row) if r is not None]
+        # Couple each observed row to its own snapshot. A removed/replaced future
+        # grant cannot become effective by projecting its old row into the post.
+        related = (_related_tasks(kind, old_row, a) if old_row is not None else set())
+        related |= _related_tasks(kind, new_row, b) if new_row is not None else set()
         if kind == "tasks" and (c["op"] != "update" or field in {
                 "status", "assignee_id", "wait_reason", "not_before_tick", "work_window"}):
             targets.update(related)
@@ -355,9 +359,12 @@ def _epoch_targets(changes: list, a: dict, b: dict) -> tuple[set, bool]:
             # than guessing from endpoint activity. Mutations in this transition
             # occur at b.tick; interior boundaries use the observed pre-step rows.
             probe_tick = t - 1 if t == interval.get("end_tick") else t
-            observed = b if probe_tick == b["tick"] else a
+            at_after = probe_tick == b["tick"]
+            observed = b if at_after else a
             probe = {**observed, "tick": probe_tick}
-            targets.update(_related_tasks(kind, row, probe))
+            observed_row = right.get((kind, row["id"])) if at_after else row
+            if observed_row is not None:
+                targets.update(_related_tasks(kind, observed_row, probe))
     return targets, uncertain
 
 
