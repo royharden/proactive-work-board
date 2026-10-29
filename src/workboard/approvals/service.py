@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Any
 
 from workboard.controller.evidence import (
-    PolicyRefusal, check_binding, integer, read_epoch, read_snapshot, require_actor,
+    PolicyRefusal, check_binding, integer, read_snapshot, require_actor,
 )
 from workboard.controller.intent import semantic_intent
 from workboard.controller.compile import compile_dependency
@@ -68,11 +68,12 @@ def decide(
     if choice not in {"approved", "rejected"}:
         raise ValueError("operator_choice_required")
     integer(tick)
-    snapshot, _ = read_snapshot(store, proposal["board_id"], proposal["task_id"], operator)
+    snapshot, _ = read_snapshot(
+        store, proposal["board_id"], proposal["task_id"], operator,
+        expected_epoch=proposal["intent"]["episode_epoch"],
+    )
     if snapshot["tick"] != tick:
         raise PolicyRefusal("operator_tick_mismatch")
-    if read_epoch(store, proposal["board_id"], proposal["task_id"], operator) != proposal["intent"]["episode_epoch"]:
-        raise PolicyRefusal("stale_host_epoch")
     check_binding(proposal, snapshot)
     decision = {
         "decision_id": "decision_" + digest_json([

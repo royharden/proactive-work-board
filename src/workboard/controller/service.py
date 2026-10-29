@@ -13,7 +13,7 @@ from workboard.schemas.canonical import digest_json, proposal_digest
 from .compile import compile_dependency
 from .evidence import (
     MAX_SCOPED_RECORDS, PolicyRefusal, evidence_ref, index_records, integer,
-    projected, read_epoch, read_snapshot, require_actor,
+    projected, read_snapshot, require_actor,
 )
 from .intent import semantic_intent
 
@@ -48,16 +48,16 @@ def _interval(value: Any, *, work: bool = False) -> tuple[int, int]:
 def propose(store: Any, board_id: str, task_id: str, actor: dict[str, Any]) -> dict[str, Any]:
     """Propose metadata only; abstain on missing/unsafe/capped observations.
 
-    One snapshot plus the durable host epoch are the only two port reads;
-    there is no optional tool-menu fetch. A session ledger also counts later
-    approval-preflight reads. D1 must enforce
+    One domain snapshot follows a mandatory host metadata reservation, whose
+    returned canonical epoch owns intent identity. No optional menu read or local
+    budget exists. Approval preflight reserves separately. D1 must enforce
     proposal/decision/transaction semantics independently of this local preview.
     """
     require_actor(actor, board_id, "read", "propose")
     if not isinstance(board_id, str) or not board_id or not isinstance(task_id, str) or not task_id:
         return {"status": "abstained", "reason": "missing_target"}
     try:
-        snapshot, episode = read_snapshot(store, board_id, task_id, actor)
+        snapshot, reservation = read_snapshot(store, board_id, task_id, actor)
         records = index_records(snapshot)
         _public_only(snapshot["records"])
         task = records["tasks"].get(task_id)
@@ -71,7 +71,7 @@ def propose(store: Any, board_id: str, task_id: str, actor: dict[str, Any]) -> d
             if dep is None or dep["id"] == task_id:
                 raise PolicyRefusal("missing_or_self_dependency")
             dependencies.append(dep)
-        epoch = read_epoch(store, board_id, task_id, actor)
+        epoch = reservation["episode_epoch"]
         tick = snapshot["tick"]
         if tick >= 72:
             raise PolicyRefusal("proposal_horizon_closed")
@@ -166,6 +166,7 @@ def propose(store: Any, board_id: str, task_id: str, actor: dict[str, Any]) -> d
             "board_id": board_id, "task_id": task_id, "at_tick": tick,
             "mode": "read_only", "changes": deepcopy(writes),
             "domain_writes": len(writes), "comment_writes": 0,
-            "episode_read_calls": episode.reads,
+            "episode_read_calls": reservation["reads_used"],
+            "episode_reads_remaining": reservation["reads_remaining"],
         },
     }
