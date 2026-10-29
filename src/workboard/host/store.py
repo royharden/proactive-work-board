@@ -454,6 +454,27 @@ class BoardStore:
                       (decision["board_id"], decision["decision_id"], decision["proposal_id"],
                        canonical_json(decision), canonical_json(actor)))
 
+    def inspect_decision(self, board_id, decision_id, actor):
+        """Read actual journal payload/consumption for acceptance observation.
+
+        This is not controller evidence selection or a policy-budget bypass.
+        No receipt inference, mutation, privileged actor mapping or cross-board
+        lookup is performed. JSON decoding gives callers a fresh independent copy.
+        """
+        _authorize(actor, board_id, "read")
+        identifier(decision_id)
+        with self._connection() as c:
+            row = c.execute("SELECT payload,consumed FROM decisions WHERE board=? AND id=?",
+                            (board_id, decision_id)).fetchone()
+            if row is None:
+                return None
+            decision = json.loads(row["payload"])
+            if decision["board_id"] != board_id or decision["decision_id"] != decision_id:
+                raise ValueError("decision_observation_scope")
+            if type(row["consumed"]) is not int or row["consumed"] not in (0, 1):
+                raise ValueError("invalid_persisted_consumption")
+            return {"decision": decision, "consumed": row["consumed"] == 1}
+
     def lookup_intent(self, board_id, key, actor):
         _authorize(actor, board_id, "read")
         with self._connection() as c:
