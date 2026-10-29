@@ -490,10 +490,102 @@ class BoardStore:
             if tick < old:
                 raise ValueError("clock_backwards")
             if tick != old:
-                before = self._snapshot(c, board_id, history=False)
-                c.execute("UPDATE boards SET tick=? WHERE id=?", (tick, board_id))
-                after = self._snapshot(c, board_id, history=False)
-                self._append_history(c, board_id, "clock", before, after, "world", actor["label"])
+                initial = self._snapshot(c, board_id, history=False)
+                boundaries = self._clock_boundaries(initial["records"], old, tick)
+                # Each crossed relevant instant is an actual logical clock step.
+                # Start AND end remain distinct even when final eligibility equals
+                # initial eligibility. All steps/epochs/history commit together.
+                instants = sorted(set(boundaries) | {tick})
+                for instant in instants:
+                    before = self._snapshot(c, board_id, history=False)
+                    targets = sorted(boundaries.get(instant, set()))
+                    for task_id in targets:
+                        c.execute("UPDATE epochs SET epoch=epoch+1 WHERE board=? AND task=?",
+                                  (board_id, task_id))
+                    c.execute("UPDATE boards SET tick=? WHERE id=?", (instant, board_id))
+                    after = self._snapshot(c, board_id, history=False)
+                    self._append_history(c, board_id, "clock", before, after, "world", actor["label"],
+                                         epoch_boundary_tasks=targets)
+
+    @staticmethod
+    def _clock_boundaries(records, old_tick, new_tick):
+        """Host-owned time predicates over public typed records, not grades.
+
+        Values are task sets at DISTINCT crossed instants. Repeated calls at the
+        same tick and unrelated/future events do not advance any task episode.
+        A grant must belong to the task's actual assignee and task/project scope;
+        availability of a possible delegate matters only under such a grant
+        active immediately before OR at the availability boundary.
+        """
+        tasks = {row["id"]: row for row in records["tasks"]}
+        transitions = {}
+
+        def add(instant, task_ids):
+            if type(instant) is int and old_tick < instant <= new_tick:
+                selected = set(task_ids) & tasks.keys()
+                if selected:
+                    transitions.setdefault(instant, set()).update(selected)
+
+        def interval_boundaries(row):
+            period = row["effective_interval"]
+            return period["start_tick"], period["end_tick"]
+
+        def grant_matches(grant, task):
+            scope = grant["scope"]
+            return (task["assignee_id"] is not None
+                    and grant["from_person_id"] == task["assignee_id"]
+                    and grant["to_person_id"] != task["assignee_id"]
+                    and (scope["kind"], scope["id"]) in
+                    (("task", task["id"]), ("project", task["project_id"])))
+
+        def active_beside(grant, instant):
+            start, end = interval_boundaries(grant)
+            # Integer clock: instant-1 is the left side of the half-open edge.
+            return start <= instant - 1 < end or start <= instant < end
+
+        # These are explicit controller/host task time predicates. A dependency's
+        # time gating is also relevant to tasks still linked to that dependency.
+        def task_and_dependants(task_id):
+            return {task_id} | {link["task_id"] for link in records["dependency_links"]
+                                if link["dependency_task_id"] == task_id}
+
+        for task in tasks.values():
+            related = task_and_dependants(task["id"])
+            add(task["not_before_tick"], related)
+            window = task["work_window"]
+            if window is not None:
+                add(window["start_tick"], related)
+                add(window["end_tick"], related)
+
+        for row in records["availability"]:
+            for instant in interval_boundaries(row):
+                affected = set()
+                for task in tasks.values():
+                    if task["assignee_id"] == row["person_id"]:
+                        affected.add(task["id"])
+                    elif any(grant["to_person_id"] == row["person_id"]
+                             and grant_matches(grant, task) and active_beside(grant, instant)
+                             for grant in records["delegations"]):
+                        affected.add(task["id"])
+                add(instant, affected)
+
+        for grant in records["delegations"]:
+            affected = {task["id"] for task in tasks.values() if grant_matches(grant, task)}
+            for instant in interval_boundaries(grant):
+                add(instant, affected)
+
+        # The supported dependency policy also checks current task-linked
+        # documents. Project-only/version-only unrelated rows are not a clock
+        # predicate. Typed document task links stay in their own project.
+        for document in records["documents"]:
+            affected = set()
+            for task_id in document["task_ids"]:
+                task = tasks.get(task_id)
+                if task is not None and task["project_id"] == document["project_id"]:
+                    affected.update(task_and_dependants(task_id))
+            for instant in interval_boundaries(document):
+                add(instant, affected)
+        return transitions
 
     @staticmethod
     def _receipt(proposal, decision, tick, status, reason=None):
