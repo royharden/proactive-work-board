@@ -1,48 +1,85 @@
-# Proactive Work Board — P01 contracts
+# Proactive Work Board — keyless engineering demo source
 
-This repository contains four contract documents, data-only JSON Schemas and an
-unfinished preregistration skeleton. It has no product implementation, installed
-CLI, runnable demo, scorer, generated boards or measured results. Runtime remains
-unverified. Source construction spent USD0 and needs no keys or placeholders.
+A deterministic Python/stdlib SQLite demo has been constructed as source: observe
+an original fictional board, propose a dependency-only change, preview it, obtain
+an exact digest-bound decision, apply atomically, inspect mechanical effects and
+render escaped reports. **Runtime and acceptance have NOT RUN.** This checkout
+must not be described as a validated runnable journey or a measured product result.
 
-Read in order:
+The public fixture, operator decisions and adverse scripts are explicitly
+**SYNTHETIC / SCRIPTED / NO PAID CALLS / NOT A MEASUREMENT**. Local actor capabilities
+and labels are demonstration policy attribution, not production authentication.
+No keys, accounts, provider network calls or paid model services are needed.
+Source construction spent USD 0; no efficacy, model or independent-audit claim is made.
 
-1. [CONTRACTS](docs/CONTRACTS.md): host/wire/action/approval boundaries, projection,
-   canonical digests and supported observable transitions.
-2. [SCENARIO-SPEC](docs/SCENARIO-SPEC.md): public/private data shapes, provenance,
-   temporal conventions and fixed split quotas.
-3. [FAMILY-GUIDE](docs/FAMILY-GUIDE.md): family meaning, independent authoring and
-   the distinction between decisions, mechanical effects and useful outcomes.
-4. [DATA-ADMISSION](docs/DATA-ADMISSION.md): role/rights/pilot/audit/custody gates
-   and the frozen-contract handoff procedure.
+Read [DEMO-QUICKSTART](docs/DEMO-QUICKSTART.md) for source navigation, future
+invocation examples, expected engineering checks and deferred runtime validation.
+[DEMO-LIMITATIONS](docs/DEMO-LIMITATIONS.md) explains mechanical verification,
+complete-history requirements and the limits of builder-authored observations.
 
-Load the complete local draft2020-12 catalog: [wire](schemas/wire/),
-[scenario](schemas/scenario/) and [admission](schemas/admission/). Scenario
-references wire definitions; admission references scenario. Resolve URNs locally,
-without network fetch. JSON parsing does not prove instance or semantic validity.
+## Future invocation — NOT RUN
 
-[freeze.json](prereg/freeze.json) records a documentary P01 pin against an EARLIER
-source commit and exact file-byte SHA256s; the record is committed later. At
-contracts_hash_basis=git_blob_bytes, hashes bind exact stored file bytes at that
-commit; the H handoff must preserve those bytes without checkout newline conversion.
-At
-stage P01_CONTRACTS, status FROZEN refers only to the four contract documents
-and all schemas. It does not admit data, appoint H/Q/custodian, approve a licence,
-complete preregistration or authorize unseal. study_status remains UNFROZEN and
-G1/G2/G3 remain PENDING - needs Roy. Attribution names delegated INT authority
-and the recorder; it does not assert that Roy personally signed the record.
+Only after explicit owner execution authority and final producer reconciliation,
+use an already available Python 3.12+ interpreter from this repository root.
+The following PowerShell examples are instructions for later use; none was executed.
+They use the source import path directly and require no package installation.
 
-[PREREG](prereg/PREREG.md) is an unfinished skeleton, not a completed study freeze.
-No model/settings/prompt/call slots, sealed data or study authority is supplied.
-Actual independent role appointments, rights and G1/G2 evidence are required
-BEFORE any product code or dev generation. Dev generation occurs only after G2.
-Later G3 common study freeze and Roy's explicit unseal decision are separate,
-even for deterministic-only USD0 execution.
+```powershell
+$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+python -m workboard.cli
+```
 
-Later authorized owners must validate the schema dialect/instances with real
-independent pilots/controls, raw agreement/kappa, rights/identities/custody,
-cross-record ID/digest/quota/interval/reachability and data-flow boundaries.
-Tests, CI, builds, setup, host/security/transaction behavior and all runtime
-journeys are NOT RUN. Nothing here authorizes spend, credentials, push,
-publication or data exposure. Private coordination, plans and transcripts stay
-outside this product repository; the adopted plan is in the private OUTER folder.
+The CLI defaults to a fixture preview and creates no database or report. Later
+execution requires an explicit fresh absolute machine-local output directory
+outside OneDrive and the source checkout, plus an approval mode:
+
+```powershell
+python -m workboard.cli --execute --manual-approval --run-dir C:\WorkboardRuns\pwb-manual-new
+python -m workboard.cli --execute --scripted-approval approved --variant happy --run-dir C:\WorkboardRuns\pwb-scripted-new
+python scripts/demo_acceptance.py --execute --run-dir C:\WorkboardRuns\pwb-acceptance-new
+```
+
+Directories named above must not already exist; choose distinct paths for each
+invocation. SQLite/WAL, trace and report files stay in these machine-local run
+folders. Source imports create no database. Manual approval requires typing the
+exact displayed digest; other input rejects. Scripted approval is visibly scripted.
+The reworded comparison refuses manual mode rather than inventing a second human
+decision. It requests exactly one cited auxiliary evidence comment and approves
+the primary and alternate exact bodies before applying either. The alternate
+uses the producer's fixed wording suffix under the same semantic intent. Future
+acceptance requires the first body to persist, the alternate body to be absent,
+and no second domain/outbox/intent effect or alternate decision consumption.
+This path requires the declared optional-comment producer/approval repair; a
+missing keyword, suffix or actual comment refuses rather than substituting IDs
+or a changed summary. The aggregate acceptance procedure returns nonzero for failed checks,
+missing APIs or incomplete verification; no successful result artifact is shipped.
+
+## Current construction limits
+
+The integrated source includes D1's durable `reserve_read`/`inspect_decision`
+and derived complete ordered history, D2's mandatory reservation before
+policy/approval reads, and D3's direct persisted-decision observations. The
+consumer uses the returned host epoch and has no per-Store fallback ledger.
+Missing/malformed decision observations fail closed; incomplete verification
+history cannot be called verified. Final combined-source review is pending.
+All runtime checks, including behavior across reopen, remain NOT RUN.
+
+## Original scientific protocol
+
+The frozen P01 documents and schemas remain authoritative and unchanged:
+[CONTRACTS](docs/CONTRACTS.md), [SCENARIO-SPEC](docs/SCENARIO-SPEC.md),
+[FAMILY-GUIDE](docs/FAMILY-GUIDE.md), [DATA-ADMISSION](docs/DATA-ADMISSION.md),
+[wire](schemas/wire/), [scenario](schemas/scenario/) and [admission](schemas/admission/).
+Resolve schema URNs locally; JSON parsing is not semantic or schema-instance validation.
+
+[freeze.json](prereg/freeze.json) pins earlier P01 Git-blob bytes, not an admitted
+study. [PREREG](prereg/PREREG.md) is unfinished. Original scientific G1/G2/G3 remain
+UNFULFILLED and no H/Q/custodian, held-out seal, rights audit or real unseal is claimed.
+An explicit successor exception admits this engineering DEMO source; it does not
+retroactively satisfy the original before-code scientific gates. There is no
+scorer, empirical study or measured agent result in this demo.
+
+Tests, CI/builds, setup, SQLite transaction/security/durability checks and demo
+acceptance are NOT RUN. Publication, deployment, credentials, spending and real
+unseal remain outside this source grant. Private plans, coordination and transcripts
+stay outside this product repository.

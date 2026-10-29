@@ -48,7 +48,7 @@ def load_public() -> dict:
             raise ValueError("scenario links must use depends_on_task_id")
         link["dependency_task_id"] = link.pop("depends_on_task_id")
     return {"board_id": BOARD_ID, "tick": 0, "evidence_scope_revision": 0,
-            "records": records, "effect_history": []}
+            "records": records}
 
 
 def scripted_actor(*capabilities: str) -> dict:
