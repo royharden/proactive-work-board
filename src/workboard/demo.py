@@ -71,18 +71,44 @@ def _inspect_decision(store, decision: dict, actor: dict) -> dict:
     return deepcopy(observed)
 
 
-def _reword(proposal: dict, digest_fn: Callable) -> dict:
-    """New exact payload, same semantic intent; host must not apply it twice."""
+def _comment_pair(proposal: dict) -> tuple[dict, dict]:
+    """Require one actual cited auxiliary comment, never summary-only proof."""
+    actions = [a for a in proposal["action_bundle"]
+               if a.get("action_kind") in {"evidence_comment", "request_info"}]
+    writes = [w for w in proposal["compiled_write_set"] if w.get("kind") == "comments"]
+    if len(actions) != 1 or len(writes) != 1:
+        raise IntegrationUnavailable("reworded proof requires exactly one comment action and insert")
+    action, write = actions[0], writes[0]
+    if (action.get("action_kind") != "evidence_comment"
+            or set(action) != {"action_kind", "task_id", "body", "cites"}
+            or set(write) != {"op", "kind", "id", "task_id", "actor_role", "body", "cites", "topic"}
+            or write["op"] != "insert" or write["actor_role"] not in {"agent", "rules"}
+            or write["task_id"] != proposal["task_id"] or action["task_id"] != proposal["task_id"]
+            or not isinstance(write["id"], str) or not write["id"] or write["topic"] is not None
+            or not isinstance(action["body"], str) or not action["body"]
+            or action["body"] != write["body"]
+            or not isinstance(action["cites"], list) or not action["cites"]
+            or action["cites"] != write["cites"]
+            or any(ref not in proposal["evidence_refs"] for ref in action["cites"])):
+        raise IntegrationUnavailable("reworded comment action/write/citation binding mismatch")
+    return action, write
+
+
+def _reword(proposal: dict, digest_fn: Callable, suffix: str) -> dict:
+    """Change a real exact comment body; preserve intent/citations/domain writes."""
+    if not isinstance(suffix, str) or not suffix.strip():
+        raise IntegrationUnavailable("producer must supply a nonempty REWORD_SUFFIX")
+    _comment_pair(proposal)
     result = deepcopy(proposal)
+    action, write = _comment_pair(result)
+    body = action["body"] + suffix
+    if len(body) > 4000:
+        raise IntegrationUnavailable("alternate comment exceeds public record text bound")
+    action["body"] = write["body"] = body
     result["proposal_id"] = result["proposal_id"][:100] + "r2"
-    result["predicted_summary"] += " (public scripted alternate wording)"
-    for write in result["compiled_write_set"]:
-        if write["kind"] == "comments":
-            write["body"] += " Alternate public wording."
-    for action in result["action_bundle"]:
-        if action.get("action_kind") == "evidence_comment" and "body" in action:
-            action["body"] += " Alternate public wording."
     result["digest"] = digest_fn(result)
+    if result["digest"] == proposal["digest"]:
+        raise IntegrationUnavailable("reworded comment did not change the full proposal digest")
     return result
 
 
@@ -138,11 +164,20 @@ def run_demo(run_dir, variant="happy", operator_choice="approved", *,
     _stage(trace, "observe", "observed", {"tick": before["tick"]})
     parked = propose(store, BOARD_ID, PARKED_ID, builder)
     trace["observations"]["parked_candidate"] = parked
-    candidate = propose(store, BOARD_ID, TASK_ID, builder)
+    if variant == "reworded":
+        # New producer seam is required only for the real comment comparison.
+        # Import at explicit execution boundary; missing support refuses, with
+        # no compatibility fallback to a domain-only or summary-only candidate.
+        from workboard.controller.compile import REWORD_SUFFIX
+        candidate = propose(store, BOARD_ID, TASK_ID, builder, with_evidence_comment=True)
+    else:
+        candidate = propose(store, BOARD_ID, TASK_ID, builder)
     _stage(trace, "propose", "observed", candidate)
     if candidate["status"] != "proposed":
         raise IntegrationUnavailable("declared happy dependency candidate abstained")
     proposal = candidate["proposal"]
+    if variant == "reworded":
+        _comment_pair(proposal)
     trace["proposal"] = proposal
     preview_snapshot = store.snapshot(BOARD_ID, reader)
     trace["observations"]["preview_snapshot"] = preview_snapshot
@@ -164,7 +199,7 @@ def run_demo(run_dir, variant="happy", operator_choice="approved", *,
         # Both exact decisions must bind the SAME still-current evidence.
         # Preparing the second after applying the first would merely exercise
         # stale-approval rejection, never changed-payload intent conflict.
-        alternate = _reword(proposal, proposal_digest)
+        alternate = _reword(proposal, proposal_digest, REWORD_SUFFIX)
         store.register_proposal(alternate, builder)
         alternate_decision = decide(store, alternate, operator, "approved", before["tick"])
         alternate_bundle = approved_bundle(alternate, alternate_decision)
@@ -218,13 +253,16 @@ def run_demo(run_dir, variant="happy", operator_choice="approved", *,
     _stage(trace, "apply", "observed", receipt)
     if variant in {"duplicate", "reworded"} and receipt and receipt.get("committed"):
         first_events = store.read_events(BOARD_ID, 0, 100, reader)
+        first_intent = store.lookup_intent(BOARD_ID, proposal["intent"]["intent_key"], reader)
         retry_bundle = bundle
         if variant == "reworded":
             retry_bundle = alternate_bundle
         retry = store.apply(retry_bundle, applier)
         trace["observations"].update(retry_receipt=retry,
             retry_snapshot=store.snapshot(BOARD_ID, reader), events_before_retry=first_events,
-            events_after_retry=store.read_events(BOARD_ID, 0, 100, reader))
+            events_after_retry=store.read_events(BOARD_ID, 0, 100, reader),
+            intent_before_retry=first_intent,
+            intent_after_retry=store.lookup_intent(BOARD_ID, proposal["intent"]["intent_key"], reader))
         _stage(trace, "duplicate retry", "observed", retry)
     # Attach only the actual exact proposal/decision to COPIED observations.
     # Histories and history_complete remain verbatim host observations; do not

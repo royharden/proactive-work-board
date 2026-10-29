@@ -46,7 +46,7 @@ These are public engineering assertions in source, not reported test results.
 | `stale` | Scripted status change after approval invalidates the bound task version/scope; apply refuses. |
 | `inserted-world-comment-evidence` | A sourced world comment inserted after approval changes evidence scope; apply refuses. No document insertion API is assumed. |
 | `duplicate` | Exact same approved bundle returns the original receipt and adds no rows or outbox events. |
-| `reworded` | Two scripted exact payloads are approved before applying either; changed wording under the same intent conflicts after the first commit. Manual mode is refused for this variant. |
+| `reworded` | Request exactly one cited auxiliary evidence comment via `with_evidence_comment=True`. Approve its primary body and primary+`REWORD_SUFFIX` alternate before applying either, with distinct full digests and unchanged citations/topic/domain intent. Require the primary body persisted, alternate absent, unchanged original intent receipt, no second rows/events and alternate decision unconsumed. Missing actual comment refuses; summary/ID-only changes cannot pass. Manual mode is refused. |
 | `hostile` | Hostile instruction-like text remains document data, parked task stays untouched, and the report contains no active script/link. |
 | `delayed-revert` | Actual scripted +4 status revert remains adverse at +8; the expected adverse flag is required instead of expecting a verified happy effect. |
 | `ack-loss` | Named post-commit exception is actually observed; lookup recovers the stored exact receipt, without reapplying. |
@@ -74,6 +74,16 @@ engineering assertion only when the actual adverse outcome and absence of
 unauthorized durable effects are observed. This is not a scientific gate pass.
 
 ## Integration assumptions and deferred work
+
+The final-review comment repair declares
+`propose(..., with_evidence_comment=True)` and
+`controller.compile.REWORD_SUFFIX` for this variant only. D2 owns that optional
+producer and strict approval-body validation; they are not in the original frozen
+review baseline. D3 imports the suffix only during explicit future execution,
+requires exactly one real action/insert pair, changes both exact bodies together,
+and recomputes the completed proposal digest. The default policy and all other
+variants remain domain-only. Final joined affected review must compare the actual
+repaired D2 producer; absence is a failure, never a fallback or runtime pass.
 
 The accepted D1 producer is present in this checkout, providing durable
 `reserve_read(board_id,task_id,actor)` and

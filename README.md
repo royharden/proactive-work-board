@@ -44,7 +44,14 @@ invocation. SQLite/WAL, trace and report files stay in these machine-local run
 folders. Source imports create no database. Manual approval requires typing the
 exact displayed digest; other input rejects. Scripted approval is visibly scripted.
 The reworded comparison refuses manual mode rather than inventing a second human
-decision. The aggregate acceptance procedure returns nonzero for failed checks,
+decision. It requests exactly one cited auxiliary evidence comment and approves
+the primary and alternate exact bodies before applying either. The alternate
+uses the producer's fixed wording suffix under the same semantic intent. Future
+acceptance requires the first body to persist, the alternate body to be absent,
+and no second domain/outbox/intent effect or alternate decision consumption.
+This path requires the declared optional-comment producer/approval repair; a
+missing keyword, suffix or actual comment refuses rather than substituting IDs
+or a changed summary. The aggregate acceptance procedure returns nonzero for failed checks,
 missing APIs or incomplete verification; no successful result artifact is shipped.
 
 ## Current construction limits

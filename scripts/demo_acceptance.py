@@ -108,6 +108,50 @@ def check_trace(trace: dict) -> None:
         else:
             require(retry["status"] == "conflict" and not retry["committed"],
                     "changed payload under same intent was not refused")
+            require(retry["actual_write_set"] == [] and retry["outbox_event_ids"] == [],
+                    "reworded refusal reported second writes/events")
+            alternate = obs["alternate_proposal"]
+            # A summary/ID-only difference cannot satisfy the comment example.
+            from workboard.demo import _comment_pair
+            from workboard.controller.compile import REWORD_SUFFIX
+            from workboard.schemas.canonical import proposal_digest
+            primary_action, primary_write = _comment_pair(proposal)
+            alternate_action, alternate_write = _comment_pair(alternate)
+            primary_body, alternate_body = primary_action["body"], alternate_action["body"]
+            require(primary_body != alternate_body and alternate_body == primary_body + REWORD_SUFFIX,
+                    "missing actual distinct approved comment bodies")
+            require(proposal["digest"] != alternate["digest"]
+                    and proposal_digest(proposal) == proposal["digest"]
+                    and proposal_digest(alternate) == alternate["digest"],
+                    "comment proposals lack distinct complete canonical digests")
+            require(alternate["intent"] == proposal["intent"]
+                    and alternate["read_binding"] == proposal["read_binding"]
+                    and alternate["evidence_refs"] == proposal["evidence_refs"],
+                    "reworded comment changed semantic intent or evidence binding")
+            require({k: v for k, v in primary_action.items() if k != "body"}
+                    == {k: v for k, v in alternate_action.items() if k != "body"}
+                    and {k: v for k, v in primary_write.items() if k != "body"}
+                    == {k: v for k, v in alternate_write.items() if k != "body"},
+                    "alternate changed comment target/citations/topic/role")
+            require([w for w in proposal["compiled_write_set"] if w["kind"] != "comments"]
+                    == [w for w in alternate["compiled_write_set"] if w["kind"] != "comments"],
+                    "alternate changed domain permissions")
+            require(trace["decision"]["status"] == "approved"
+                    and obs["alternate_decision"]["status"] == "approved"
+                    and trace["decision"]["actor_kind"] == "scripted"
+                    and obs["alternate_decision"]["actor_kind"] == "scripted"
+                    and trace["decision"]["proposal_digest"] == proposal["digest"]
+                    and obs["alternate_decision"]["proposal_digest"] == alternate["digest"],
+                    "both exact comment bodies were not approved")
+            require(_row(after, "comments", primary_write["id"])["body"] == primary_body
+                    and _row(persisted, "comments", primary_write["id"])["body"] == primary_body,
+                    "primary approved body not actually persisted")
+            require(not any(row["body"] == alternate_body
+                            for row in persisted["records"]["comments"]),
+                    "alternate comment body persisted despite conflict")
+            require(obs["intent_before_retry"] == receipt
+                    and obs["intent_after_retry"] == receipt and original == receipt,
+                    "retry changed the original durable intent receipt")
             alternate_journal = _inspect_decision(reopened, obs["alternate_decision"], reader)
             require(alternate_journal["consumed"] is False,
                     "changed-payload refusal consumed the alternate decision")
