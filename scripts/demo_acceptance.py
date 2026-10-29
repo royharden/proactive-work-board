@@ -42,6 +42,15 @@ def check_trace(trace: dict) -> None:
     persisted = reopened.snapshot(BOARD_ID, reader)
     require(persisted["records"] == (trace["delayed"] or after)["records"],
             "reopened domain rows differ from observed final snapshot")
+    # Read-only journal inspection is a named D1 reconciliation seam. A missing
+    # implementation fails this acceptance instead of silently skipping durable
+    # one-use/rollback checks or inferring them from a controller decision.
+    inspect_decision = getattr(reopened, "inspect_decision", None)
+    require(callable(inspect_decision), "D1 inspect_decision(board_id,decision_id,actor) required")
+    journal = inspect_decision(BOARD_ID, trace["decision"]["decision_id"], reader)
+    require(journal["decision"] == trace["decision"], "durable decision differs from exact approval")
+    events = reopened.read_events(BOARD_ID, 0, 100, reader)
+    original = reopened.lookup_intent(BOARD_ID, proposal["intent"]["intent_key"], reader)
     if variant in {"rejected", "expired", "stale", "inserted-evidence"}:
         expected_status = {"rejected": "rejected", "expired": "expired",
                            "stale": "stale", "inserted-evidence": "stale"}[variant]
@@ -50,20 +59,22 @@ def check_trace(trace: dict) -> None:
         require(receipt["actual_write_set"] == [] and receipt["outbox_event_ids"] == [],
                 "refused apply reported writes or outbox")
         require(after["records"] == obs["pre_apply"]["records"], "refused apply changed rows")
+        require(events == obs["events_before_apply"], "refused apply appended durable outbox events")
+        require(original is None, "refused apply persisted an intent receipt")
+        require(journal["consumed"] is False, "refused apply consumed the decision")
         require(not any(e["flags"]["verified"] for e in trace["effect_records"]),
                 "refusal was marked verified")
         return
     require(receipt["committed"] is True and receipt["status"] == "applied", "apply failed")
+    require(journal["consumed"] is True, "committed decision not durably consumed")
     require(bool(receipt["actual_write_set"]) and bool(receipt["outbox_event_ids"]),
             "committed receipt lacks actual writes/outbox")
     require(_row(after, "tasks", TASK_ID)["status"] == "ready", "focal task not ready")
     require(not any(row["task_id"] == TASK_ID for row in after["records"]["dependency_links"]),
             "satisfied dependency link persists")
-    events = reopened.read_events(BOARD_ID, 0, 100, reader)
     event_ids = [event["event_id"] for event in events]
     require(len(event_ids) == len(set(event_ids)), "duplicate durable outbox event IDs")
     require(set(receipt["outbox_event_ids"]).issubset(event_ids), "receipt events not persisted")
-    original = reopened.lookup_intent(BOARD_ID, proposal["intent"]["intent_key"], reader)
     require(original is not None and original["receipt_id"] == receipt["receipt_id"],
             "durable original receipt missing")
     require(original["actual_write_set"] == receipt["actual_write_set"], "durable writes mismatch")
@@ -90,6 +101,11 @@ def check_trace(trace: dict) -> None:
         else:
             require(retry["status"] == "conflict" and not retry["committed"],
                     "changed payload under same intent was not refused")
+            alternate_journal = inspect_decision(
+                BOARD_ID, obs["alternate_decision"]["decision_id"], reader)
+            require(alternate_journal["decision"] == obs["alternate_decision"]
+                    and alternate_journal["consumed"] is False,
+                    "changed-payload refusal consumed or changed alternate decision")
     if variant == "ack-loss":
         require(obs.get("acknowledgement_lost") is True, "ack-loss fault did not actually occur")
     if variant == "hostile":

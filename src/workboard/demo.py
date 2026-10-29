@@ -144,6 +144,17 @@ def run_demo(run_dir, variant="happy", operator_choice="approved", *,
     decision = decide(store, proposal, operator, choice, before["tick"])
     trace["decision"] = decision
     _stage(trace, "decision", "observed", decision)
+    alternate_bundle = None
+    if variant == "reworded" and choice == "approved":
+        # Both exact decisions must bind the SAME still-current evidence.
+        # Preparing the second after applying the first would merely exercise
+        # stale-approval rejection, never changed-payload intent conflict.
+        alternate = _reword(proposal, proposal_digest)
+        store.register_proposal(alternate, builder)
+        alternate_decision = decide(store, alternate, operator, "approved", before["tick"])
+        alternate_bundle = approved_bundle(alternate, alternate_decision)
+        trace["observations"].update(alternate_proposal=alternate,
+                                      alternate_decision=alternate_decision)
     if variant == "expired":
         advance(store, decision["expires_tick"], simulator)
     elif variant == "stale":
@@ -153,6 +164,7 @@ def run_demo(run_dir, variant="happy", operator_choice="approved", *,
         insert_contradiction(store, simulator)
     # Compare apply effects to its actual baseline, separately from fixture edits.
     trace["observations"]["pre_apply"] = store.snapshot(BOARD_ID, reader)
+    trace["observations"]["events_before_apply"] = store.read_events(BOARD_ID, 0, 100, reader)
     bundle = approved_bundle(proposal, decision)
     if variant == "ack-loss":
         # Explicit optional fault seam. Missing API is a reported integration
@@ -181,11 +193,7 @@ def run_demo(run_dir, variant="happy", operator_choice="approved", *,
         first_events = store.read_events(BOARD_ID, 0, 100, reader)
         retry_bundle = bundle
         if variant == "reworded":
-            alternate = _reword(proposal, proposal_digest)
-            store.register_proposal(alternate, builder)
-            retry_decision = decide(store, alternate, operator, "approved", after["tick"])
-            retry_bundle = approved_bundle(alternate, retry_decision)
-            trace["observations"]["alternate_proposal"] = alternate
+            retry_bundle = alternate_bundle
         retry = store.apply(retry_bundle, applier)
         trace["observations"].update(retry_receipt=retry,
             retry_snapshot=store.snapshot(BOARD_ID, reader), events_before_retry=first_events,
