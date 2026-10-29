@@ -347,10 +347,17 @@ def _epoch_targets(changes: list, a: dict, b: dict) -> tuple[set, bool]:
         else:
             continue
         boundaries.extend(interval.get(k) for k in ("start_tick", "end_tick"))
-        if any(type(t) is int and a["tick"] < t <= b["tick"] for t in boundaries):
-            # End boundaries use the pre-boundary observation; start boundaries
-            # use the post-boundary one. Inactive future rows do not reset now.
-            targets.update(_related_tasks(kind, row, a) | _related_tasks(kind, row, b))
+        for t in boundaries:
+            if type(t) is not int or not a["tick"] < t <= b["tick"]:
+                continue
+            # A jump can cross BOTH ends of an interval while its endpoints are
+            # inactive. Evaluate the relation inside the crossed interval rather
+            # than guessing from endpoint activity. Mutations in this transition
+            # occur at b.tick; interior boundaries use the observed pre-step rows.
+            probe_tick = t - 1 if t == interval.get("end_tick") else t
+            observed = b if probe_tick == b["tick"] else a
+            probe = {**observed, "tick": probe_tick}
+            targets.update(_related_tasks(kind, row, probe))
     return targets, uncertain
 
 

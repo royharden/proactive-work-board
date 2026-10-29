@@ -40,6 +40,10 @@ pending rather than asserting absent duplicate/binding evidence.
   Delegation rows must be effective and scoped to a task whose current assignee
   is the grantor; inactive future grants and grants between unrelated people do
   not reset epochs. Availability likewise requires an effective assignee row.
+  Clock jumps evaluate relevance inside each crossed interval boundary, even
+  when both observed endpoint ticks are outside the interval. History entries
+  represent mutations at their after tick; interior timer boundaries use pre-step
+  observed records. A host with different ordering must supply finer transitions.
   Edited non-arm business prose has uncertain substantive meaning: it makes historical
   proof incomplete rather than resetting an epoch and hiding repeats. No latent
   outcome label is consulted. Producer completeness/actor attribution is a local
