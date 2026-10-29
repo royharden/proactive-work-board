@@ -286,9 +286,21 @@ def _related_tasks(kind: str, row: dict, snapshot: dict) -> set[str]:
         return {t["id"] for t in tasks if t["id"] in row.get("task_ids", [])
                 or t.get("project_id") == row.get("project_id")}
     if kind == "availability":
+        interval = row.get("effective_interval", {})
+        if not (type(interval.get("start_tick")) is int and type(interval.get("end_tick")) is int
+                and interval["start_tick"] <= snapshot["tick"] < interval["end_tick"]):
+            return set()
         persons = {row.get("person_id")}
         return {t["id"] for t in tasks if t.get("assignee_id") in persons}
     if kind == "delegations":
+        interval = row.get("effective_interval", {})
+        if not (type(interval.get("start_tick")) is int and type(interval.get("end_tick")) is int
+                and interval["start_tick"] <= snapshot["tick"] < interval["end_tick"]):
+            return set()
+        # A project-wide row for unrelated people is not a task blocker change.
+        # Only an effective grant FROM its actual assignee can alter its episode.
+        tasks = [t for t in tasks if t.get("assignee_id") is not None
+                 and t.get("assignee_id") == row.get("from_person_id")]
         scope = row.get("scope", {})
         if scope.get("kind") == "task":
             return {t["id"] for t in tasks if t["id"] == scope.get("id")}
@@ -336,7 +348,9 @@ def _epoch_targets(changes: list, a: dict, b: dict) -> tuple[set, bool]:
             continue
         boundaries.extend(interval.get(k) for k in ("start_tick", "end_tick"))
         if any(type(t) is int and a["tick"] < t <= b["tick"] for t in boundaries):
-            targets.update(_related_tasks(kind, row, a))
+            # End boundaries use the pre-boundary observation; start boundaries
+            # use the post-boundary one. Inactive future rows do not reset now.
+            targets.update(_related_tasks(kind, row, a) | _related_tasks(kind, row, b))
     return targets, uncertain
 
 
