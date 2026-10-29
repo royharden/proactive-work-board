@@ -18,7 +18,6 @@ These are local observation claims, not authenticated or independent audit proof
 from __future__ import annotations
 
 import hashlib
-import json
 from typing import Any
 
 from workboard.schemas.canonical import digest_json, proposal_digest
@@ -37,6 +36,35 @@ def _tick(value: Any) -> bool:
 
 def _hex(value: Any) -> bool:
     return isinstance(value, str) and len(value) == 64 and all(c in "0123456789abcdef" for c in value)
+
+
+def _receipt(value: Any) -> tuple[dict, str]:
+    """Do not let malformed identities or non-JSON input reach a positive path."""
+    try:
+        if not isinstance(value, dict) or not all(isinstance(k, str) for k in value):
+            raise ValueError("receipt must be a JSON object")
+        identity = ("receipt_id", "board_id", "proposal_id", "decision_id")
+        if not all(isinstance(value.get(k), str) and value[k] for k in identity):
+            raise ValueError("missing receipt identity")
+        if not all(_hex(value.get(k)) for k in ("proposal_digest", "intent_key")):
+            raise ValueError("invalid receipt digest")
+        if not _tick(value.get("applied_tick")) or type(value.get("committed")) is not bool:
+            raise ValueError("invalid receipt time/commit")
+        statuses = {"applied", "stale", "rejected", "expired", "superseded", "conflict",
+                    "not_applied", "unsupported_capability"}
+        if not isinstance(value.get("status"), str) or value["status"] not in statuses:
+            raise ValueError("invalid receipt status")
+        if not isinstance(value.get("actual_write_set"), list) or not isinstance(value.get("outbox_event_ids"), list):
+            raise ValueError("missing observed writes/outbox")
+        if not all(isinstance(x, str) and x for x in value["outbox_event_ids"]):
+            raise ValueError("invalid outbox identities")
+        for name in ("recovered_original_receipt_id", "reason_code"):
+            if name not in value or (value[name] is not None and not isinstance(value[name], str)):
+                raise ValueError("missing receipt fields")
+        # Canonical conversion is inside protection, including cyclic/mixed keys.
+        return value, digest_json(value)
+    except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+        return {}, hashlib.sha256(b"unobserved-receipt").hexdigest()
 
 
 def _core(snapshot: dict) -> dict:
@@ -233,7 +261,8 @@ def _persists(expected: list, snapshot: dict) -> bool:
             if row is not None:
                 return False
         elif e["op"] == "insert":
-            if row != e["after"]:
+            material = lambda r: {k: v for k, v in r.items() if k not in NOISE}
+            if row is None or material(row) != material(e["after"]):
                 return False
         elif row is None:
             return False
@@ -245,13 +274,79 @@ def _persists(expected: list, snapshot: dict) -> bool:
     return True
 
 
+def _related_tasks(kind: str, row: dict, snapshot: dict) -> set[str]:
+    """Relation from observable IDs only; display names are never blockers."""
+    tasks = snapshot["records"]["tasks"]
+    if kind == "tasks":
+        return {row["id"]} | {r["task_id"] for r in snapshot["records"]["dependency_links"]
+                               if r.get("dependency_task_id") == row["id"]}
+    if kind in {"dependency_links", "comments"}:
+        return {row["task_id"]} if row.get("task_id") else set()
+    if kind == "documents":
+        return {t["id"] for t in tasks if t["id"] in row.get("task_ids", [])
+                or t.get("project_id") == row.get("project_id")}
+    if kind == "availability":
+        persons = {row.get("person_id")}
+        return {t["id"] for t in tasks if t.get("assignee_id") in persons}
+    if kind == "delegations":
+        scope = row.get("scope", {})
+        if scope.get("kind") == "task":
+            return {t["id"] for t in tasks if t["id"] == scope.get("id")}
+        if scope.get("kind") == "project":
+            return {t["id"] for t in tasks if t.get("project_id") == scope.get("id")}
+        return set()
+    return set()
+
+
+def _epoch_targets(changes: list, a: dict, b: dict) -> tuple[set, bool]:
+    """Separate actual blocker transitions from broad effect attribution.
+
+    Substantiveness of edited business prose cannot be proved mechanically. Do
+    not reset an epoch for it; mark history uncertain instead of hiding repeats.
+    """
+    targets, uncertain = set(), False
+    left, right = _rows(a), _rows(b)
+    for c in changes:
+        kind, ident, field = c["kind"], c["id"], c["field"]
+        rows = [r for r in (left.get((kind, ident)), right.get((kind, ident))) if r is not None]
+        related = set().union(*(_related_tasks(kind, r, a) | _related_tasks(kind, r, b) for r in rows))
+        if kind == "tasks" and (c["op"] != "update" or field in {
+                "status", "assignee_id", "wait_reason", "not_before_tick", "work_window"}):
+            targets.update(related)
+        elif kind == "dependency_links":
+            targets.update(related)
+        elif kind in {"availability", "delegations"}:
+            targets.update(related)
+        elif kind in {"comments", "documents"}:
+            if kind == "comments" and all(r.get("origin") == "arm" for r in rows):
+                continue
+            # Prose changes might be substantive OR cosmetic. Neither guess is
+            # accepted as a new duplicate epoch or a complete historical proof.
+            uncertain |= bool(related)
+        # Task title/description and person display_name never reset an epoch.
+    # A timer tick matters only at an actual relevant observable boundary.
+    for (kind, _), row in left.items():
+        boundaries = []
+        if kind == "tasks":
+            boundaries.append(row.get("not_before_tick"))
+            interval = row.get("work_window") or {}
+        elif kind in {"availability", "delegations", "documents"}:
+            interval = row.get("effective_interval") or {}
+        else:
+            continue
+        boundaries.extend(interval.get(k) for k in ("start_tick", "end_tick"))
+        if any(type(t) is int and a["tick"] < t <= b["tick"] for t in boundaries):
+            targets.update(_related_tasks(kind, row, a))
+    return targets, uncertain
+
+
 def _history(observation: dict, before: dict, after: dict, receipt: dict, expected: list) -> tuple:
     """Return complete, duplicate, reverted, human; inspect all intervening steps."""
     entries = observation.get("effect_history")
     if observation.get("history_complete") is not True or not isinstance(entries, list) or not entries:
         return False, False, False, False
     seen, epochs = set(), {}
-    duplicate = reverted = human = found = False
+    duplicate = reverted = human = found = uncertain = False
     current_keys = set()
     previous = None
     for entry in entries:
@@ -288,23 +383,12 @@ def _history(observation: dict, before: dict, after: dict, receipt: dict, expect
                 targets.update(e["after"]["task_id"] for e in expected if e["kind"] == "comments")
                 targets.update(e["before"]["task_id"] for e in expected if e["kind"] == "dependency_links")
                 human |= any(_affected(c, b) & targets for c in changes)
-        # Reconstruct public epochs from relevant observed business transitions.
-        changed_tasks = set()
-        for c in changes:
-            if c["kind"] == "comments":
-                r = c["after"] or c["before"]
-                # Arm wording/delivery changes never begin a blocker episode.
-                if isinstance(r, dict) and r.get("origin") == "arm":
-                    continue
-            changed_tasks.update(_affected(c, b))
-            if c["kind"] == "tasks" and c["field"] == "status":
-                # Dependency state changes are relevant to tasks depending on it.
-                changed_tasks.update(r["task_id"] for r in a["records"]["dependency_links"]
-                                     if r.get("dependency_task_id") == c["id"])
+        changed_tasks, ambiguous = _epoch_targets(changes, a, b)
+        uncertain |= ambiguous
         for task in changed_tasks:
             epochs[task] = epochs.get(task, 0) + 1
         previous = b
-    complete = found and digest_json(_core(previous)) == digest_json(_core(observation))
+    complete = found and not uncertain and digest_json(_core(previous)) == digest_json(_core(observation))
     return complete, duplicate, reverted, human
 
 
@@ -315,12 +399,12 @@ def inspect_effect(before: Any, after: Any, delayed: Any, compiled_writes: Any, 
     They never imply a receipt exists. Detailed limitations belong in the trace,
     since the frozen EffectRecord does not permit extra diagnostic fields.
     """
-    r = receipt if isinstance(receipt, dict) else {}
+    r, receipt_hash = _receipt(receipt)
     ident = lambda name: r.get(name) if isinstance(r.get(name), str) and r[name] else "unobserved"
     flags = {k: False for k in (*PRECEDENCE, "superseded_by_human")}
     checks = dict(exact_writes=False, no_collateral=False, no_duplicate=False,
                   immediate="pending", delayed="pending", delayed_tick=None)
-    record = dict(effect_id="effect-" + hashlib.sha256(json.dumps(r, sort_keys=True, default=str).encode()).hexdigest(),
+    record = dict(effect_id="effect-" + receipt_hash,
                   board_id=ident("board_id"), proposal_id=ident("proposal_id"), receipt_id=ident("receipt_id"),
                   intent_key=r.get("intent_key") if _hex(r.get("intent_key")) else "0" * 64,
                   observed_tick=0, checks=checks, flags=flags, display_status="pending",
@@ -373,7 +457,7 @@ def inspect_effect(before: Any, after: Any, delayed: Any, compiled_writes: Any, 
                              and not any(flags[k] for k in PRECEDENCE[:-1]))
         if not bound and checks["exact_writes"]:
             checks["immediate"] = "pending"
-    except (ValueError, TypeError, KeyError, AttributeError, IndexError, OverflowError):
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError, OverflowError, RecursionError):
         # Partial observations may still retain already discovered adverse flags.
         flags["verified"] = False
         checks["immediate"] = "pending"

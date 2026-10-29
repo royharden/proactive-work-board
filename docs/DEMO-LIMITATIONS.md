@@ -35,7 +35,10 @@ pending rather than asserting absent duplicate/binding evidence.
   observed host history, not receipt-only actual-write claims.
 - Full history reconstructs per-effect class, normalized target and public epochs
   without controller imports/intent-key grouping. Human supersession is attribution
-  only. Broad evidence changes conservatively start relevant task epochs; no latent
+  only. Observable blocker/state and effective-boundary changes start relevant
+  task epochs; unrelated person edits and task title/description do not. Edited
+  non-arm business prose has uncertain substantive meaning: it makes historical
+  proof incomplete rather than resetting an epoch and hiding repeats. No latent
   outcome label is consulted. Producer completeness/actor attribution is a local
   engineering assumption, never authentication or independent custody proof.
 - Delayed observations must cover at least apply tick +8, including intervening
