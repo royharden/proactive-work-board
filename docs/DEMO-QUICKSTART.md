@@ -75,21 +75,22 @@ unauthorized durable effects are observed. This is not a scientific gate pass.
 
 ## Integration assumptions and deferred work
 
-This D3 baseline has the initial D1/D2 producers. D1 owns final durable
+The accepted D1 producer is present in this checkout, providing durable
 `reserve_read(board_id,task_id,actor)` and
 `inspect_decision(board_id,decision_id,actor)` plus complete ordered,
-nonrecursive observed history. D2 owns replacing its initial per-object ledger
+nonrecursive observed history. These are constructed source, not executed proof.
+D2 still owns replacing its initial per-object read ledger
 and locally inferred epochs with the durable host reservation before selection
 and approval reads. Observer-only driver/verifier snapshots are outside that
 selection budget. Reopening a Store must not reset the selection cap; using one
 Store here is convenience, not proof of that property.
 
-D3 does not implement either producer. Missing decision inspection fails closed;
+D3 consumes these APIs without reimplementing either producer. Missing decision inspection fails closed;
 no direct journal SQL, fallback cache or unconditional success is provided.
 `before.verification_context` binds the actual proposal/decision on a copied
 snapshot. D3 never sets `history_complete` or fills a canned history. Missing,
 uncertain or discontinuous observation history must remain pending and cannot
-pass the happy acceptance assertions. Final producer commits require a later
+pass the happy acceptance assertions. Final D2 consumer integration requires a later
 combined-source inspection, then explicit execution authorization and actual
 SQLite/approval/rollback/history/report checks.
 

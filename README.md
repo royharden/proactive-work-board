@@ -49,13 +49,15 @@ missing APIs or incomplete verification; no successful result artifact is shippe
 
 ## Current construction limits
 
-D1's durable `reserve_read`/`inspect_decision` and complete ordered history, and
-D2's matching durable-read consumer repair, are explicit producer promises being
-integrated separately. This allocated source baseline still contains the initial
-per-store policy ledger and lacks the new host journal methods. D3 consumes the
-declared final seam without fallback caches or SQL. Missing `inspect_decision`
-fails closed; missing verification history cannot be called verified. Final
-combined-source tracing and every runtime check remain deferred.
+D1's durable `reserve_read`/`inspect_decision` and derived complete ordered
+history are present in this source checkout. D3 directly observes the persisted
+decision through that API, without fallback caches or SQL. D2's matching durable
+reservation consumer repair remains a separate integration package: the current
+policy still counts reads per Store object. A final source comparison must confirm
+that it charges the durable host reservation before policy/approval reads across
+reopen. Missing/malformed decision observations fail closed; incomplete verification
+history cannot be called verified. Final combined-source tracing and every runtime
+check remain deferred.
 
 ## Original scientific protocol
 
