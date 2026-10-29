@@ -1,0 +1,358 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:wire:common",
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tick": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 96
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "row-version": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "projects",
+            "tasks",
+            "dependency_links",
+            "comments",
+            "documents",
+            "people",
+            "availability",
+            "delegations"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "evidence-ref": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "projects",
+            "tasks",
+            "dependency_links",
+            "comments",
+            "documents",
+            "people",
+            "availability",
+            "delegations"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "version",
+        "digest"
+      ],
+      "additionalProperties": false
+    },
+    "read-binding": {
+      "type": "object",
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "projects",
+                  "tasks",
+                  "dependency_links",
+                  "comments",
+                  "documents",
+                  "people",
+                  "availability",
+                  "delegations"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version"
+            ],
+            "additionalProperties": false
+          },
+          "uniqueItems": true
+        },
+        "evidence_scope_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "effective_from_tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 96
+        },
+        "effective_until_tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 96
+        }
+      },
+      "required": [
+        "rows",
+        "evidence_scope_revision",
+        "effective_from_tick",
+        "effective_until_tick"
+      ],
+      "additionalProperties": false
+    },
+    "write": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "delete"
+            },
+            "kind": {
+              "const": "dependency_links"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "task_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dependency_task_id": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "op",
+            "kind",
+            "id",
+            "task_id",
+            "dependency_task_id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "update"
+            },
+            "kind": {
+              "const": "tasks"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "field": {
+              "const": "status"
+            },
+            "value": {
+              "const": "ready"
+            }
+          },
+          "required": [
+            "op",
+            "kind",
+            "id",
+            "field",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "update"
+            },
+            "kind": {
+              "const": "tasks"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "field": {
+              "const": "assignee_id"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "op",
+            "kind",
+            "id",
+            "field",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "insert"
+            },
+            "kind": {
+              "const": "comments"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "task_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "actor_role": {
+              "enum": [
+                "agent",
+                "rules"
+              ]
+            },
+            "body": {
+              "type": "string",
+              "minLength": 1
+            },
+            "cites": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "projects",
+                      "tasks",
+                      "dependency_links",
+                      "comments",
+                      "documents",
+                      "people",
+                      "availability",
+                      "delegations"
+                    ]
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id",
+                  "version",
+                  "digest"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "topic": {
+              "anyOf": [
+                {
+                  "$ref": "urn:workboard:v1:wire:common#/$defs/information-topic"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "kind",
+            "id",
+            "task_id",
+            "actor_role",
+            "body",
+            "cites",
+            "topic"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "status": {
+      "enum": [
+        "todo",
+        "blocked",
+        "ready",
+        "in_progress",
+        "done",
+        "parked"
+      ]
+    },
+    "information-topic": {
+      "enum": [
+        "decision_record",
+        "dependency_state",
+        "delegation_scope",
+        "availability_window",
+        "work_window"
+      ]
+    },
+    "equivalent-action-class": {
+      "enum": [
+        "clear_dependency",
+        "set_ready",
+        "reassign_to_delegate",
+        "request_info",
+        "evidence_comment"
+      ]
+    }
+  }
+}

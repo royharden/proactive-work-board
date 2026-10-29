@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:wire:effect-record",
+  "type": "object",
+  "properties": {
+    "effect_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "board_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "receipt_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "intent_key": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "observed_tick": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 96
+    },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "exact_writes": {
+          "type": "boolean"
+        },
+        "no_collateral": {
+          "type": "boolean"
+        },
+        "no_duplicate": {
+          "type": "boolean"
+        },
+        "immediate": {
+          "enum": [
+            "pass",
+            "fail",
+            "pending"
+          ]
+        },
+        "delayed": {
+          "enum": [
+            "pass",
+            "fail",
+            "pending"
+          ]
+        },
+        "delayed_tick": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 96
+        }
+      },
+      "required": [
+        "exact_writes",
+        "no_collateral",
+        "no_duplicate",
+        "immediate",
+        "delayed",
+        "delayed_tick"
+      ],
+      "additionalProperties": false
+    },
+    "flags": {
+      "type": "object",
+      "properties": {
+        "collateral": {
+          "type": "boolean"
+        },
+        "duplicate": {
+          "type": "boolean"
+        },
+        "reverted": {
+          "type": "boolean"
+        },
+        "partial": {
+          "type": "boolean"
+        },
+        "not_applied": {
+          "type": "boolean"
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "superseded_by_human": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "collateral",
+        "duplicate",
+        "reverted",
+        "partial",
+        "not_applied",
+        "verified",
+        "superseded_by_human"
+      ],
+      "additionalProperties": false
+    },
+    "display_status": {
+      "enum": [
+        "collateral",
+        "duplicate",
+        "reverted",
+        "partial",
+        "not_applied",
+        "verified",
+        "pending"
+      ]
+    },
+    "feedback": {
+      "enum": [
+        "applied",
+        "stale",
+        "not_applied",
+        "partial",
+        "duplicate",
+        "collateral",
+        "not_persisted"
+      ]
+    },
+    "snapshot_digests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "minItems": 1
+    },
+    "affected_task_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "effect_id",
+    "board_id",
+    "proposal_id",
+    "receipt_id",
+    "intent_key",
+    "observed_tick",
+    "checks",
+    "flags",
+    "display_status",
+    "feedback",
+    "snapshot_digests",
+    "affected_task_ids"
+  ],
+  "additionalProperties": false
+}

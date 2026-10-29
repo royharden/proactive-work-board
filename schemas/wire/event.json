@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:wire:event",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "board_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "entity_kind": {
+      "enum": [
+        "projects",
+        "tasks",
+        "dependency_links",
+        "comments",
+        "documents",
+        "people",
+        "availability",
+        "delegations"
+      ]
+    },
+    "entity_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entity_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "occurred_tick": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 96
+    },
+    "origin": {
+      "enum": [
+        "exogenous",
+        "human",
+        "agent",
+        "rules"
+      ]
+    },
+    "payload_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "required": [
+    "event_id",
+    "board_id",
+    "seq",
+    "entity_kind",
+    "entity_id",
+    "entity_version",
+    "occurred_tick",
+    "origin",
+    "payload_digest"
+  ],
+  "additionalProperties": false
+}

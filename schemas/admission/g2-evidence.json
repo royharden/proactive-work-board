@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:admission:g2-evidence",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "gate": {
+      "const": "G2"
+    },
+    "status": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/status"
+    },
+    "g1_evidence": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "heldout_author": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+    },
+    "bundle": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "board_hashes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "board_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "observable_board_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "exogenous_script_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "expected_outcomes_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "board_id",
+          "observable_board_sha256",
+          "exogenous_script_sha256",
+          "expected_outcomes_sha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 20,
+      "maxItems": 20
+    },
+    "template_hash_inventory": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "scenario_hash_inventory": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "disjointness_review": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "split_inventory": {
+      "$ref": "urn:workboard:v1:scenario:private-split-inventory"
+    },
+    "quota_review": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "bounded_evidence_decidability_review": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "reachable_state_background_review": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "canary_coverage_review": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "blind_audit": {
+      "type": "object",
+      "properties": {
+        "draw_seed": {
+          "type": "integer"
+        },
+        "draw_manifest": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        "raw_pre_adjudication_labels": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        "situations": {
+          "const": 30
+        },
+        "per_family": {
+          "type": "object",
+          "properties": {
+            "dependency": {
+              "const": 5
+            },
+            "semantic_evidence": {
+              "const": 5
+            },
+            "delegate": {
+              "const": 5
+            },
+            "missing_info_ask": {
+              "const": 5
+            },
+            "decoy": {
+              "const": 5
+            },
+            "duplicate_restraint": {
+              "const": 5
+            }
+          },
+          "required": [
+            "dependency",
+            "semantic_evidence",
+            "delegate",
+            "missing_info_ask",
+            "decoy",
+            "duplicate_restraint"
+          ],
+          "additionalProperties": false
+        },
+        "raw_agreement_numerator": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "raw_agreement_denominator": {
+          "const": 30
+        },
+        "raw_agreement": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "cohens_kappa": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "changed_label_list": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        "pre_seal_adjudications": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        "ambiguous_case_disposition": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        "raw_results_published_in_later_report": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "draw_seed",
+        "draw_manifest",
+        "raw_pre_adjudication_labels",
+        "situations",
+        "per_family",
+        "raw_agreement_numerator",
+        "raw_agreement_denominator",
+        "raw_agreement",
+        "cohens_kappa",
+        "changed_label_list",
+        "pre_seal_adjudications",
+        "ambiguous_case_disposition",
+        "raw_results_published_in_later_report"
+      ],
+      "additionalProperties": false
+    },
+    "q_controls": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "const": 6
+        },
+        "author": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+        },
+        "authored_before_hidden_audit_and_implementation": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        "controls_bundle": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        "coverage_review": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        }
+      },
+      "required": [
+        "count",
+        "author",
+        "authored_before_hidden_audit_and_implementation",
+        "controls_bundle",
+        "coverage_review"
+      ],
+      "additionalProperties": false
+    },
+    "seal_record": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "custodian_disposition": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/attribution"
+    }
+  },
+  "required": [
+    "schema_version",
+    "gate",
+    "status",
+    "g1_evidence",
+    "heldout_author",
+    "bundle",
+    "board_hashes",
+    "template_hash_inventory",
+    "scenario_hash_inventory",
+    "disjointness_review",
+    "split_inventory",
+    "quota_review",
+    "bounded_evidence_decidability_review",
+    "reachable_state_background_review",
+    "canary_coverage_review",
+    "blind_audit",
+    "q_controls",
+    "seal_record",
+    "custodian_disposition"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PASS"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "blind_audit": {
+            "properties": {
+              "raw_agreement": {
+                "minimum": 0.8
+              },
+              "cohens_kappa": {
+                "minimum": 0.6
+              }
+            }
+          },
+          "split_inventory": {
+            "properties": {
+              "split": {
+                "const": "heldout"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

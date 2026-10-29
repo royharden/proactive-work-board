@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:admission:admission-record",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "edition_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/status"
+    },
+    "builders": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+      },
+      "minItems": 1
+    },
+    "h": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+    },
+    "q": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+    },
+    "custodian": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+    },
+    "role_separation_review": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "g1": {
+      "$ref": "urn:workboard:v1:admission:g1-evidence"
+    },
+    "g2": {
+      "$ref": "urn:workboard:v1:admission:g2-evidence"
+    },
+    "author_attestations": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "rights_record": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "contract_freeze_record": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+    },
+    "seal": {
+      "type": "object",
+      "properties": {
+        "bundle_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "h": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+        },
+        "q": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+        },
+        "freeze_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "private_custody_location": {
+          "type": "string",
+          "minLength": 1
+        },
+        "custodian": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+        },
+        "family_counts": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/family_counts"
+        },
+        "sealed_bundle_receipt": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+        },
+        "attribution": {
+          "$ref": "urn:workboard:v1:admission:common#/$defs/attribution"
+        }
+      },
+      "required": [
+        "bundle_sha256",
+        "h",
+        "q",
+        "freeze_utc",
+        "private_custody_location",
+        "custodian",
+        "family_counts",
+        "sealed_bundle_receipt",
+        "attribution"
+      ],
+      "additionalProperties": false
+    },
+    "single_unseal_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "edition_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "g3_freeze_record": {
+            "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+          },
+          "roy_r07_decision": {
+            "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+          },
+          "mode": {
+            "enum": [
+              "funded_frozen_slots",
+              "explicit_deterministic_only"
+            ]
+          },
+          "frozen_slot_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unsealed_utc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "custodian": {
+            "$ref": "urn:workboard:v1:admission:common#/$defs/identity"
+          },
+          "one_pass_receipt": {
+            "$ref": "urn:workboard:v1:admission:common#/$defs/artifact"
+          }
+        },
+        "required": [
+          "edition_sha256",
+          "g3_freeze_record",
+          "roy_r07_decision",
+          "mode",
+          "frozen_slot_id",
+          "unsealed_utc",
+          "custodian",
+          "one_pass_receipt"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "admission_freeze_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "admission_record_attribution": {
+      "$ref": "urn:workboard:v1:admission:common#/$defs/attribution"
+    }
+  },
+  "required": [
+    "schema_version",
+    "edition_id",
+    "status",
+    "builders",
+    "h",
+    "q",
+    "custodian",
+    "role_separation_review",
+    "g1",
+    "g2",
+    "author_attestations",
+    "rights_record",
+    "contract_freeze_record",
+    "seal",
+    "single_unseal_log",
+    "admission_freeze_utc",
+    "admission_record_attribution"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PASS"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "g1": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            }
+          },
+          "g2": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

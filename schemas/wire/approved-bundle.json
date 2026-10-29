@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:wire:approved-bundle",
+  "type": "object",
+  "properties": {
+    "proposal": {
+      "$ref": "urn:workboard:v1:wire:proposal"
+    },
+    "decision": {
+      "allOf": [
+        {
+          "$ref": "urn:workboard:v1:wire:decision"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "approved"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "required": [
+    "proposal",
+    "decision"
+  ],
+  "additionalProperties": false
+}

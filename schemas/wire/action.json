@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:wire:action",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "action_kind": {
+          "const": "clear_dependency"
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dependency_link_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dependency_task_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "action_kind",
+        "task_id",
+        "dependency_link_id",
+        "dependency_task_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "action_kind": {
+          "const": "set_ready"
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "action_kind",
+        "task_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "action_kind": {
+          "const": "reassign_to_delegate"
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "delegate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "delegation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "availability_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "action_kind",
+        "task_id",
+        "delegate_id",
+        "delegation_id",
+        "availability_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "action_kind": {
+          "const": "request_info"
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "topic": {
+          "$ref": "urn:workboard:v1:wire:common#/$defs/information-topic"
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "projects",
+                  "tasks",
+                  "dependency_links",
+                  "comments",
+                  "documents",
+                  "people",
+                  "availability",
+                  "delegations"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version",
+              "digest"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "action_kind",
+        "task_id",
+        "topic",
+        "body",
+        "cites"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "action_kind": {
+          "const": "evidence_comment"
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "projects",
+                  "tasks",
+                  "dependency_links",
+                  "comments",
+                  "documents",
+                  "people",
+                  "availability",
+                  "delegations"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version",
+              "digest"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "action_kind",
+        "task_id",
+        "body",
+        "cites"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Policy-generated template data; information topics must belong to the frozen finite policy vocabulary, not arbitrary model strings."
+}

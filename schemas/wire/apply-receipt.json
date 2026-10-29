@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:workboard:v1:wire:apply-receipt",
+  "type": "object",
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "board_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposal_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "intent_key": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "applied_tick": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 96
+    },
+    "status": {
+      "enum": [
+        "applied",
+        "stale",
+        "rejected",
+        "expired",
+        "superseded",
+        "conflict",
+        "not_applied",
+        "unsupported_capability"
+      ]
+    },
+    "committed": {
+      "type": "boolean"
+    },
+    "actual_write_set": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "op": {
+            "enum": [
+              "insert",
+              "update",
+              "delete"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "before": {},
+          "after": {}
+        },
+        "required": [
+          "op",
+          "kind",
+          "id",
+          "field",
+          "before",
+          "after"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "outbox_event_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "recovered_original_receipt_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reason_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "receipt_id",
+    "board_id",
+    "proposal_id",
+    "decision_id",
+    "proposal_digest",
+    "intent_key",
+    "applied_tick",
+    "status",
+    "committed",
+    "actual_write_set",
+    "outbox_event_ids",
+    "recovered_original_receipt_id",
+    "reason_code"
+  ],
+  "additionalProperties": false
+}
