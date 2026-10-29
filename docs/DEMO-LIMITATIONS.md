@@ -36,12 +36,11 @@ pending rather than asserting absent duplicate/binding evidence.
 - Full history reconstructs per-effect class, normalized target and public epochs
   without controller imports/intent-key grouping. Human supersession is attribution
   only. Observable blocker/state and effective-boundary changes start relevant
-  task epochs; unrelated person edits and task title/description do not. Edited
-  delegation rows must be effective and scoped to a task whose current assignee
+  task epochs; unrelated person edits and task title/description do not.
+  Delegation rows must be effective and scoped to a task whose current assignee
   is the grantor; inactive future grants and grants between unrelated people do
   not reset epochs. Availability likewise requires an effective assignee row.
-  Edited
-  non-arm business prose has uncertain substantive meaning: it makes historical
+  Edited non-arm business prose has uncertain substantive meaning: it makes historical
   proof incomplete rather than resetting an epoch and hiding repeats. No latent
   outcome label is consulted. Producer completeness/actor attribution is a local
   engineering assumption, never authentication or independent custody proof.
