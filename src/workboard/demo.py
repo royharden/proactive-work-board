@@ -87,6 +87,8 @@ def run_demo(run_dir, variant="happy", operator_choice="approved", *,
         raise ValueError("unknown variant or operator choice")
     if operator_choice == "manual" and manual_decider is None:
         raise ValueError("manual approval requires an explicit local prompt")
+    if variant == "reworded" and operator_choice == "manual":
+        raise ValueError("reworded payload comparison requires SCRIPTED approvals; manual mode refused")
     output = validate_run_dir(run_dir)
     # Sibling imports occur only upon explicit execution, not module import.
     from workboard.host.store import BoardStore
