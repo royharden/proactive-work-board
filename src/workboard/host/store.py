@@ -27,6 +27,7 @@ DDL = (
     "CREATE TABLE IF NOT EXISTS intents (board TEXT NOT NULL, key TEXT NOT NULL, payload TEXT NOT NULL, receipt TEXT NOT NULL, PRIMARY KEY(board,key), FOREIGN KEY(board) REFERENCES boards(id))",
     "CREATE TABLE IF NOT EXISTS outbox (seq INTEGER PRIMARY KEY AUTOINCREMENT, board TEXT NOT NULL, payload TEXT NOT NULL, FOREIGN KEY(board) REFERENCES boards(id))",
     "CREATE TABLE IF NOT EXISTS history (seq INTEGER PRIMARY KEY AUTOINCREMENT, board TEXT NOT NULL, payload TEXT NOT NULL, FOREIGN KEY(board) REFERENCES boards(id))",
+    "CREATE TABLE IF NOT EXISTS initial_boundaries (board TEXT PRIMARY KEY, payload TEXT NOT NULL, FOREIGN KEY(board) REFERENCES boards(id))",
     "CREATE TABLE IF NOT EXISTS epochs (board TEXT NOT NULL, task TEXT NOT NULL, epoch INTEGER NOT NULL, PRIMARY KEY(board,task), FOREIGN KEY(board) REFERENCES boards(id))",
 )
 
@@ -102,9 +103,105 @@ class BoardStore:
         result = {"board_id": board_id, "tick": board["tick"],
                   "evidence_scope_revision": board["revision"], "records": records}
         if history:
-            result["effect_history"] = [json.loads(row["payload"]) for row in
+            entries = [json.loads(row["payload"]) for row in
                 c.execute("SELECT payload FROM history WHERE board=? ORDER BY seq", (board_id,))]
+            result["effect_history"] = entries
+            result["history_complete"] = self._history_complete(c, board_id, result, entries)
         return result
+
+    @staticmethod
+    def _core_digest(core, board_id):
+        closed(core, "board_id tick evidence_scope_revision records")
+        if core["board_id"] != board_id:
+            raise ValueError("history_board_scope")
+        integer(core["tick"], 0, 96)
+        integer(core["evidence_scope_revision"])
+        validate_graph(core["records"])
+        for rows in core["records"].values():
+            if rows != sorted(rows, key=lambda row: row["id"]):
+                raise ValueError("history_core_order")
+        return digest_json(core)
+
+    def _history_complete(self, c, board_id, observation, entries):
+        """Derive chronology completeness; this is not semantic verification.
+
+        Legacy/partial stores stay explicitly incomplete. No retrospective seed,
+        missing-step interpolation, or caller-provided success flag is accepted.
+        """
+        if not c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='initial_boundaries'").fetchone():
+            return False
+        anchor = c.execute("SELECT payload FROM initial_boundaries WHERE board=?", (board_id,)).fetchone()
+        if anchor is None or not entries:
+            return False
+        try:
+            initial = json.loads(anchor["payload"])
+            initial_digest = self._core_digest(initial, board_id)
+            if initial["tick"] != 0 or initial["evidence_scope_revision"] != 0:
+                return False
+            previous, previous_digest = initial, None
+            for index, entry in enumerate(entries):
+                a, b = entry["before"], entry["after"]
+                if (entry["observation_seq"] != index or entry["previous_digest"] != previous_digest
+                        or entry["actor_kind"] not in ("world", "human", "rules", "agent")
+                        or not isinstance(entry["actor_label"], str) or not entry["actor_label"]):
+                    return False
+                if self._core_digest(a, board_id) != self._core_digest(previous, board_id):
+                    return False
+                self._core_digest(b, board_id)
+                if b["tick"] < a["tick"] or b["evidence_scope_revision"] < a["evidence_scope_revision"]:
+                    return False
+                kind = entry["entry_kind"]
+                if index == 0:
+                    if (kind != "seed" or digest_json(a) != initial_digest
+                            or digest_json(b) != initial_digest or "receipt" in entry):
+                        return False
+                elif kind == "clock":
+                    if (b["tick"] <= a["tick"] or b["records"] != a["records"]
+                            or b["evidence_scope_revision"] != a["evidence_scope_revision"]
+                            or "receipt" in entry):
+                        return False
+                elif kind in ("apply", "scripted_edit"):
+                    if (b["tick"] != a["tick"] or b["records"] == a["records"]
+                            or b["evidence_scope_revision"] <= a["evidence_scope_revision"]):
+                        return False
+                    if kind == "apply":
+                        receipt, proposal, decision = entry["receipt"], entry["proposal"], entry["decision"]
+                        stored = c.execute("SELECT receipt FROM intents WHERE board=? AND key=?",
+                                           (board_id, receipt["intent_key"])).fetchone()
+                        journal_p = c.execute("SELECT payload FROM proposals WHERE board=? AND id=?",
+                                              (board_id, receipt["proposal_id"])).fetchone()
+                        journal_d = c.execute("SELECT payload,consumed FROM decisions WHERE board=? AND id=?",
+                                              (board_id, receipt["decision_id"])).fetchone()
+                        if (stored is None or json.loads(stored["receipt"]) != receipt
+                                or journal_p is None or json.loads(journal_p["payload"]) != proposal
+                                or journal_d is None or json.loads(journal_d["payload"]) != decision
+                                or journal_d["consumed"] != 1 or receipt["board_id"] != board_id
+                                or receipt["status"] != "applied" or receipt["committed"] is not True
+                                or receipt["applied_tick"] != b["tick"]):
+                            return False
+                    elif "receipt" in entry:
+                        return False
+                else:
+                    return False
+                previous, previous_digest = b, digest_json(entry)
+            core = {key: observation[key] for key in ("board_id", "tick", "evidence_scope_revision", "records")}
+            return self._core_digest(previous, board_id) == self._core_digest(core, board_id)
+        except (ValueError, TypeError, KeyError, AttributeError, RecursionError):
+            return False
+
+    def _append_history(self, c, board_id, kind, before, after, actor_kind, actor_label, **extra):
+        """Persist an actual transition inside its mutation transaction."""
+        self._core_digest(before, board_id)
+        self._core_digest(after, board_id)
+        last = c.execute("SELECT payload FROM history WHERE board=? ORDER BY seq DESC LIMIT 1", (board_id,)).fetchone()
+        previous = None if last is None else json.loads(last["payload"])
+        # Old incomplete databases are never repaired by fabricating an anchor.
+        sequence = 0 if previous is None else previous.get("observation_seq", -1) + 1
+        entry = {"entry_kind": kind, "observation_seq": sequence,
+                 "previous_digest": None if previous is None else digest_json(previous),
+                 "before": before, "after": after, "actor_kind": actor_kind,
+                 "actor_label": actor_label, **extra}
+        c.execute("INSERT INTO history(board,payload) VALUES (?,?)", (board_id, canonical_json(entry)))
 
     def initialize(self, board, actor):
         board = deepcopy(board)
@@ -129,6 +226,11 @@ class BoardStore:
                     self._put(c, board["board_id"], kind, row)
             for task in board["records"]["tasks"]:
                 c.execute("INSERT INTO epochs VALUES (?,?,0)", (board["board_id"], task["id"]))
+            initial = self._snapshot(c, board["board_id"], history=False)
+            c.execute("INSERT INTO initial_boundaries VALUES (?,?)",
+                      (board["board_id"], canonical_json(initial)))
+            self._append_history(c, board["board_id"], "seed", initial, deepcopy(initial),
+                                 "world", actor["label"])
 
     def capabilities(self):
         return list(CAPABILITIES)
@@ -137,6 +239,25 @@ class BoardStore:
         _authorize(actor, board_id, "read")
         with self._connection() as c:
             return self._snapshot(c, board_id)
+
+    def verification_snapshot(self, board_id, proposal_id, decision_id, actor):
+        """Read a consistent core/history plus exact board-local journal context.
+
+        Call before apply; later/stale context remains subject to the verifier's
+        independent binding checks. This never invents a proposal or decision.
+        """
+        _authorize(actor, board_id, "read")
+        with self._connection() as c:
+            proposal = c.execute("SELECT payload FROM proposals WHERE board=? AND id=?",
+                                 (board_id, proposal_id)).fetchone()
+            decision = c.execute("SELECT payload FROM decisions WHERE board=? AND id=? AND proposal=?",
+                                 (board_id, decision_id, proposal_id)).fetchone()
+            if proposal is None or decision is None:
+                raise ValueError("missing_verification_context")
+            result = self._snapshot(c, board_id)
+            result["verification_context"] = {"proposal": json.loads(proposal["payload"]),
+                                               "decision": json.loads(decision["payload"])}
+            return result
 
     def read_task(self, board_id, task_id, actor):
         return self.read_record(board_id, "tasks", task_id, actor)
@@ -303,10 +424,11 @@ class BoardStore:
             old = self._board(c, board_id)["tick"]
             if tick < old:
                 raise ValueError("clock_backwards")
-            c.execute("UPDATE boards SET tick=? WHERE id=?", (tick, board_id))
             if tick != old:
-                c.execute("INSERT INTO history(board,payload) VALUES (?,?)",
-                          (board_id, canonical_json({"origin": "clock", "tick": tick, "from_tick": old})))
+                before = self._snapshot(c, board_id, history=False)
+                c.execute("UPDATE boards SET tick=? WHERE id=?", (tick, board_id))
+                after = self._snapshot(c, board_id, history=False)
+                self._append_history(c, board_id, "clock", before, after, "world", actor["label"])
 
     @staticmethod
     def _receipt(proposal, decision, tick, status, reason=None):
@@ -378,10 +500,11 @@ class BoardStore:
             after = self._snapshot(c, board_id, history=False)
             c.execute("INSERT INTO intents VALUES (?,?,?,?)",
                       (board_id, receipt["intent_key"], canonical_json(proposal), canonical_json(receipt)))
-            c.execute("INSERT INTO history(board,payload) VALUES (?,?)", (board_id, canonical_json({
-                "origin": "arm", "tick": tick, "proposal": proposal, "decision": decision,
-                "receipt": receipt, "before": before, "after": after, "changes": receipt["actual_write_set"],
-                "actor": {"label": actor["label"], "kind": actor["kind"]}})))
+            role = "agent" if any(w.get("actor_role") == "agent"
+                                       for w in proposal["compiled_write_set"]) else "rules"
+            self._append_history(c, board_id, "apply", before, after, role, actor["label"],
+                                 proposal=proposal, decision=decision, receipt=receipt,
+                                 changes=receipt["actual_write_set"])
             if self.failpoint == "precommit_abort":
                 raise PrecommitAbort("injected before commit; recover only after rollback")
             if self.failpoint not in (None, "postcommit_ack_loss"):
@@ -528,7 +651,6 @@ class BoardStore:
             source = "script-" + digest_json([board_id, tick, before["evidence_scope_revision"], changes])
             actual, events = self._mutate(c, board_id, changes, tick, "exogenous", source_event_id=source)
             self._bump_epochs(c, board_id, changes, before)
-            c.execute("INSERT INTO history(board,payload) VALUES (?,?)", (board_id, canonical_json({
-                "origin": "exogenous", "source_event_id": source, "tick": tick, "before": before,
-                "after": self._snapshot(c, board_id, history=False),
-                "changes": actual, "outbox_event_ids": events, "actor": {"label": actor["label"], "kind": actor["kind"]}})))
+            self._append_history(c, board_id, "scripted_edit", before,
+                                 self._snapshot(c, board_id, history=False), "world", actor["label"],
+                                 source_event_id=source, changes=actual, outbox_event_ids=events)
